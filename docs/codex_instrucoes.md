@@ -41,3 +41,22 @@ A arquitetura definida é um monólito modular em camadas.
 Cada tarefa deve ter escopo pequeno e critérios de aceite claros.
 
 O Codex deve evitar alterações fora do pedido.
+
+## Fontes técnicas obrigatórias
+
+Antes de criar models, migrations, services, repositories ou endpoints, o Codex deve consultar os documentos em docs/:
+
+- docs/arquitetura.md
+- docs/modelo-relacional.md
+- docs/diagrama-classes.md
+- docs/casos-uso.md
+- docs/decisoes-glpi.md
+- docs/contratos-json.md
+
+O DER Revisado é a fonte principal para nomes de tabelas, campos, chaves e relacionamentos.
+
+O Diagrama de Classes é a fonte principal para organização do domínio em classes, responsabilidades e enums.
+
+Os Casos de Uso são a fonte principal para ordem dos fluxos funcionais.
+
+Não criar campos, entidades ou relacionamentos fora desses documentos sem explicar antes.
