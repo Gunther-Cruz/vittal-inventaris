@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Novo usuario - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>Novo usuario</h1>
+<form method="post" action="{{ url_for('usuarios.criar_usuario') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <label for="nome">Nome</label>
+  <input id="nome" name="nome" type="text" autocomplete="name" required>
+
+  <label for="email">Email</label>
+  <input id="email" name="email" type="email" autocomplete="email" required>
+
+  <label for="perfil">Perfil</label>
+  <select id="perfil" name="perfil" required>
+    {% for perfil in perfis %}
+      <option value="{{ perfil.value }}">{{ perfil.value }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="senha">Senha inicial</label>
+  <input id="senha" name="senha" type="password" autocomplete="new-password" required>
+
+  <button type="submit">Criar usuario</button>
+</form>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>Area autenticada</h1>
+<p>{{ current_user.nome }}</p>
+<p>{{ current_user.email }}</p>
+<p>{{ current_user.perfil.value }}</p>
+
+{% if current_user.perfil.value == "COORDENADOR" %}
+  <p><a href="{{ url_for('usuarios.novo_usuario') }}">Criar usuario</a></p>
+{% endif %}
+
+<form method="post" action="{{ url_for('auth.logout') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit">Sair</button>
+</form>
+{% endblock %}

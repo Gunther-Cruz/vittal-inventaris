@@ -16,6 +16,7 @@ env/
 
 # Environment
 .env
+local/
 
 # Docker
 *.log

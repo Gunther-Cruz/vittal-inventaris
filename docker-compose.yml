@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: vittal_inventaris_app
     environment:
-      FLASK_APP: ${FLASK_APP:-app}
+      FLASK_APP: ${FLASK_APP:-app:create_app}
       FLASK_ENV: ${FLASK_ENV:-development}
       FLASK_DEBUG: ${FLASK_DEBUG:-1}
       DATABASE_URL: ${DATABASE_URL}
