@@ -1,0 +1,409 @@
+@startuml
+
+top to bottom direction
+hide empty members
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+title Diagrama de Classes - VITTAL Inventaris
+
+package "Enums / Tipos de Apoio" {
+
+  enum PerfilUsuario {
+    PROFESSOR
+    TECNICO
+    COORDENADOR
+  }
+
+  enum EscopoChamado {
+    ESTACAO
+    LABORATORIO
+  }
+
+  enum AlvoTipo {
+    GABINETE
+    MONITOR
+    LABORATORIO
+  }
+
+  enum Prioridade {
+    BAIXA
+    MEDIA
+    ALTA
+    CRITICA
+  }
+
+  enum StatusChamado {
+    ABERTO
+    EM_ATENDIMENTO
+    CONCLUIDO
+    CANCELADO
+  }
+
+  enum StatusOS {
+    ABERTA
+    EM_EXECUCAO
+    AGUARDANDO_MANUTENCAO
+    FINALIZADA
+    CANCELADA
+  }
+
+  enum TipoManutencao {
+    CORRETIVA
+    PREVENTIVA
+    INSPECAO
+  }
+
+  enum SituacaoOperacional {
+    EM_FUNCIONAMENTO
+    EM_MANUTENCAO
+    DESATIVADO
+    FUNCIONAL_DESALOCADO
+  }
+}
+
+package "Classes de Dominio" {
+
+  class Laboratorio {
+    +id: int
+    +codigoLaboratorio: string
+    +nomeLaboratorio: string
+    +pavilhao: string
+    +ativo: bool
+    +observacao: string
+  }
+
+  class EstacaoTrabalho {
+    +id: int
+    +codigoEstacao: string
+    +posicaoMapaX: int
+    +posicaoMapaY: int
+    +ativa: bool
+    +observacao: string
+  }
+
+  abstract class AtivoTI {
+    +id: int
+    +numPatrimonio: string
+    +numeroSerie: string
+    +fabricante: string
+    +modelo: string
+    +situacaoOperacional: SituacaoOperacional
+    +glpiId: int
+    +glpiSyncStatus: string
+    +glpiLastSyncAt: datetime
+    +observacao: string
+  }
+
+  class Gabinete {
+    +lote: string
+    +dataCompra: date
+    +processadorModelo: string
+    +processadorFrequenciaGhz: decimal
+    +placaMaeModelo: string
+    +memoriaInstaladaGb: decimal
+    +memoriaTecnologia: string
+    +memoriaVelocidadeMhz: int
+    +memoriaSlotsTotal: int
+    +memoriaSlotsOcupacao: string
+    +armazenamentoDescricao: string
+    +fonteDescricao: string
+    +sistemaOperacional: string
+  }
+
+  class Monitor {
+    +polegadas: decimal
+    +tipoConexao: string
+    +dataCompra: date
+  }
+
+  class Usuario {
+    +id: int
+    +nome: string
+    +email: string
+    +senhaHash: string
+    +perfil: PerfilUsuario
+    +podeVisualizarDashboard: bool
+    +ativo: bool
+    +dataCriacao: datetime
+    +dataAtualizacao: datetime
+  }
+
+  class Chamado {
+    +id: int
+    +codigoProtocolo: string
+    +nomeRequerente: string
+    +emailRequerente: string
+    +escopoChamado: EscopoChamado
+    +titulo: string
+    +descricaoRelatada: string
+    +prioridade: Prioridade
+    +urgencia: string
+    +statusAtual: StatusChamado
+    +dataAbertura: datetime
+    +dataEncerramento: datetime
+    +observacaoEncerramento: string
+    +glpiTicketId: int
+    +glpiSyncStatus: string
+    +glpiLastSyncAt: datetime
+  }
+
+  class HistoricoChamado {
+    +id: int
+    +statusAnterior: string
+    +statusNovo: string
+    +dataEvento: datetime
+    +descricaoEvento: string
+    +observacao: string
+  }
+
+  class TipoProblema {
+    +id: int
+    +codigo: string
+    +nomeProblema: string
+    +escopoAtivo: string
+    +ativo: bool
+    +descricao: string
+  }
+
+  class OrdemServico {
+    +id: int
+    +alvoTipo: AlvoTipo
+    +statusOS: StatusOS
+    +tipoManutencao: TipoManutencao
+    +dataAberturaOS: datetime
+    +dataFechamentoOS: datetime
+    +diagnostico: string
+    +servicoExecutado: string
+    +observacao: string
+  }
+
+  class AlocacaoGabineteEstacao {
+    +id: int
+    +dataInicio: datetime
+    +dataFim: datetime
+    +motivoMovimentacao: string
+    +observacao: string
+  }
+
+  class AlocacaoMonitorEstacao {
+    +id: int
+    +dataInicio: datetime
+    +dataFim: datetime
+    +motivoMovimentacao: string
+    +observacao: string
+  }
+
+  class UpgradeGabinete {
+    +id: int
+    +componenteAlterado: string
+    +descricaoAnterior: string
+    +descricaoNova: string
+    +dataUpgrade: datetime
+    +observacao: string
+  }
+
+  class DescarteAtivo {
+    +id: int
+    +tipoAtivo: string
+    +descricaoPeca: string
+    +dataDescarte: datetime
+    +motivoDescarte: string
+    +observacao: string
+  }
+}
+
+package "Classes de Servico" {
+
+  class AuthService {
+    +autenticar(email: string, senha: string): Usuario
+    +verificarPermissao(usuario: Usuario, acao: string): bool
+    +verificarPermissaoDashboard(usuario: Usuario): bool
+  }
+
+  class UsuarioService {
+    +cadastrarUsuario(dados: object): Usuario
+    +atualizarUsuario(usuario: Usuario, dados: object): Usuario
+    +alterarPerfil(usuario: Usuario, perfil: PerfilUsuario): void
+    +alterarStatusUsuario(usuario: Usuario, ativo: bool): void
+    +definirPermissaoDashboard(usuario: Usuario, permitido: bool): void
+    +listarUsuarios(filtros: object): List<Usuario>
+  }
+
+  class InventarioService {
+    +cadastrarLaboratorio(dados: object): Laboratorio
+    +atualizarLaboratorio(laboratorio: Laboratorio, dados: object): Laboratorio
+
+    +cadastrarEstacao(laboratorio: Laboratorio, dados: object): EstacaoTrabalho
+    +atualizarEstacao(estacao: EstacaoTrabalho, dados: object): EstacaoTrabalho
+
+    +cadastrarGabinete(dados: object): Gabinete
+    +importarGabinetePorJSON(jsonTecnico: object, dadosManuais: object): Gabinete
+    +atualizarGabinete(gabinete: Gabinete, dados: object): Gabinete
+
+    +cadastrarMonitor(dados: object): Monitor
+    +atualizarMonitor(monitor: Monitor, dados: object): Monitor
+
+    +movimentarGabinete(gabinete: Gabinete, estacaoDestino: EstacaoTrabalho, tecnico: Usuario): void
+    +movimentarMonitor(monitor: Monitor, estacaoDestino: EstacaoTrabalho, tecnico: Usuario): void
+
+    +registrarUpgradeGabinete(gabinete: Gabinete, tecnico: Usuario, dados: object): UpgradeGabinete
+    +registrarDescarteAtivo(tecnico: Usuario, dados: object): DescarteAtivo
+
+    +consultarInventario(filtros: object): object
+    +consultarHistoricoAtivo(ativo: AtivoTI): object
+  }
+
+  class ChamadoService {
+    +abrirChamadoEstacao(dados: object): Chamado
+    +abrirChamadoLaboratorio(dados: object): Chamado
+    +abrirChamadoAutenticado(usuario: Usuario, dados: object): Chamado
+    +abrirChamadoExterno(nome: string, email: string, dados: object): Chamado
+
+    +consultarPorProtocolo(codigo: string): Chamado
+    +consultarChamados(filtros: object): List<Chamado>
+
+    +assumirChamado(chamado: Chamado, tecnico: Usuario): void
+    +alterarStatusChamado(chamado: Chamado, status: StatusChamado, usuario: Usuario): void
+    +atualizarStatusConformeOS(chamado: Chamado): void
+    +encerrarChamado(chamado: Chamado, usuario: Usuario, observacao: string): void
+  }
+
+  class OrdemServicoService {
+    +criarOSParaChamado(chamado: Chamado, tecnico: Usuario, tipoProblema: TipoProblema): OrdemServico
+    +criarOSAvulsa(tecnico: Usuario, dados: object): OrdemServico
+    +atualizarOS(os: OrdemServico, dados: object): OrdemServico
+    +alterarStatusOS(os: OrdemServico, status: StatusOS, usuario: Usuario): void
+    +finalizarOS(os: OrdemServico, usuario: Usuario): void
+  }
+
+  class HistoricoChamadoService {
+    +registrarEvento(chamado: Chamado, usuario: Usuario, descricao: string): HistoricoChamado
+    +registrarMudancaStatus(chamado: Chamado, statusAnterior: StatusChamado, statusNovo: StatusChamado, usuario: Usuario): HistoricoChamado
+  }
+
+  class DashboardService {
+    +gerarIndicadoresChamados(filtros: object): object
+    +gerarIndicadoresOS(filtros: object): object
+    +gerarIndicadoresAtivos(filtros: object): object
+    +gerarRelatorioInfraestrutura(filtros: object): object
+    +gerarRelatorioManutencoes(filtros: object): object
+  }
+
+  class GlpiAdapter {
+    +sincronizarGabinete(gabinete: Gabinete): void
+    +sincronizarMonitor(monitor: Monitor): void
+    +sincronizarChamado(chamado: Chamado): void
+    +consultarStatusSincronizacao(entidade: object): object
+  }
+}
+
+' =========================
+' Heranca de dominio
+' =========================
+AtivoTI <|-- Gabinete
+AtivoTI <|-- Monitor
+
+' =========================
+' Estrutura fisica e ativos
+' =========================
+Laboratorio "1" -- "0..*" EstacaoTrabalho : estacoes
+EstacaoTrabalho "0..1" -- "0..1" Gabinete : gabineteAtual
+EstacaoTrabalho "0..1" -- "0..1" Monitor : monitorAtual
+
+Gabinete "1" -- "0..*" AlocacaoGabineteEstacao : alocacoes
+EstacaoTrabalho "1" -- "0..*" AlocacaoGabineteEstacao : alocacoesGabinete
+Usuario "1" -- "0..*" AlocacaoGabineteEstacao : alocacoesGabinete
+
+Monitor "1" -- "0..*" AlocacaoMonitorEstacao : alocacoes
+EstacaoTrabalho "1" -- "0..*" AlocacaoMonitorEstacao : alocacoesMonitor
+Usuario "1" -- "0..*" AlocacaoMonitorEstacao : alocacoesMonitor
+
+' =========================
+' Chamados
+' =========================
+Laboratorio "1" -- "0..*" Chamado : chamados
+EstacaoTrabalho "0..1" -- "0..*" Chamado : chamados
+Usuario "0..1" -- "0..*" Chamado : chamadosAbertos
+Usuario "0..1" -- "0..*" Chamado : chamadosComoResponsavelAtual
+
+Chamado "1" -- "0..*" HistoricoChamado : historico
+Usuario "0..1" -- "0..*" HistoricoChamado : historicosRegistrados
+
+' =========================
+' Ordens de servico
+' =========================
+Chamado "0..1" -- "0..*" OrdemServico : ordensServico
+Usuario "1" -- "0..*" OrdemServico : ordensServico
+TipoProblema "1" -- "0..*" OrdemServico : ordensServico
+
+Gabinete "0..1" -- "0..*" OrdemServico : ordensServico
+Monitor "0..1" -- "0..*" OrdemServico : ordensServico
+Laboratorio "0..1" -- "0..*" OrdemServico : ordensServico
+
+' =========================
+' Ciclo de vida dos ativos
+' =========================
+Gabinete "1" -- "0..*" UpgradeGabinete : upgrades
+Usuario "1" -- "0..*" UpgradeGabinete : upgradesRegistrados
+
+Gabinete "0..1" -- "0..*" DescarteAtivo : descartes
+Monitor "0..1" -- "0..*" DescarteAtivo : descartes
+Usuario "1" -- "0..*" DescarteAtivo : descartesRegistrados
+
+' =========================
+' Dependencias de servico
+' =========================
+AuthService ..> Usuario
+InventarioService ..> Gabinete
+InventarioService ..> Monitor
+InventarioService ..> EstacaoTrabalho
+InventarioService ..> AlocacaoGabineteEstacao
+InventarioService ..> AlocacaoMonitorEstacao
+InventarioService ..> UpgradeGabinete
+InventarioService ..> DescarteAtivo
+
+ChamadoService ..> Chamado
+ChamadoService ..> HistoricoChamado
+ChamadoService ..> OrdemServico
+
+OrdemServicoService ..> OrdemServico
+OrdemServicoService ..> Chamado
+OrdemServicoService ..> TipoProblema
+
+HistoricoChamadoService ..> HistoricoChamado
+HistoricoChamadoService ..> Chamado
+
+DashboardService ..> Chamado
+DashboardService ..> OrdemServico
+DashboardService ..> Gabinete
+DashboardService ..> Monitor
+DashboardService ..> Laboratorio
+
+GlpiAdapter ..> Gabinete
+GlpiAdapter ..> Monitor
+GlpiAdapter ..> Chamado
+
+note right of Chamado
+Representa o relato inicial da ocorrencia.
+Pode ser aberto por usuario autenticado
+ou por aluno como requerente externo.
+end note
+
+note right of OrdemServico
+Representa um servico tecnico especifico.
+Pode estar vinculada a um chamado
+ou ser criada diretamente pelo tecnico.
+end note
+
+note right of Usuario
+Perfis persistidos:
+PROFESSOR, TECNICO, COORDENADOR.
+Aluno nao e usuario persistido.
+end note
+
+@enduml
+

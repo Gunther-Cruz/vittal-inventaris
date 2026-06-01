@@ -17,6 +17,22 @@ def pode_criar_usuarios(usuario) -> bool:
     return usuario_tem_perfil(usuario, PerfilUsuario.COORDENADOR)
 
 
+def pode_gerenciar_usuarios(usuario) -> bool:
+    """Centraliza o acesso administrativo ao bloco de usuarios."""
+    return pode_criar_usuarios(usuario)
+
+
+def pode_visualizar_dashboard(usuario) -> bool:
+    """Valida acesso ao dashboard conforme perfil e permissao persistida."""
+    if not usuario or not usuario.is_authenticated or not usuario.ativo:
+        return False
+
+    if usuario.perfil == PerfilUsuario.COORDENADOR:
+        return True
+
+    return bool(getattr(usuario, "pode_visualizar_dashboard", False))
+
+
 def perfis_criaveis_por(usuario) -> tuple[PerfilUsuario, ...]:
     if not pode_criar_usuarios(usuario):
         return ()

@@ -1,0 +1,17 @@
+@startuml
+left to right direction
+title Diagrama de Caso de Uso - Ator Aluno
+
+actor "Aluno" as Aluno
+
+rectangle "Sistema VITTAL Inventaris" {
+   usecase "Visualizar Mapa dos Laboratórios\ne Status das Estações" as UC2
+  usecase "Registrar Chamado" as UC4
+  usecase "Consultar Chamado por Protocolo" as UC3
+}
+
+Aluno --> UC4
+Aluno --> UC2
+Aluno --> UC3
+
+@enduml

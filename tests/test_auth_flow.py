@@ -4,6 +4,7 @@ import unittest
 from app import create_app
 from app.extensions import db
 from app.services.auth_service import AuthService
+from app.services.usuario_service import UsuarioService
 
 
 class AuthFlowTestCase(unittest.TestCase):
@@ -14,23 +15,30 @@ class AuthFlowTestCase(unittest.TestCase):
         db.create_all()
         self.client = self.app.test_client()
         self.auth_service = AuthService()
-        self.auth_service.registrar_usuario(
-            nome="Professor IFRS",
-            email="professor@ifrs.edu.br",
-            senha="SenhaTeste123",
-            perfil="PROFESSOR",
+        self.usuario_service = UsuarioService()
+        self.professor = self.usuario_service.cadastrar_usuario(
+            {
+                "nome": "Professor IFRS",
+                "email": "professor@ifrs.edu.br",
+                "senha": "SenhaTeste123",
+                "perfil": "PROFESSOR",
+            }
         )
-        self.auth_service.registrar_usuario(
-            nome="Tecnico IFRS",
-            email="tecnico@ifrs.edu.br",
-            senha="SenhaTeste123",
-            perfil="TECNICO",
+        self.tecnico = self.usuario_service.cadastrar_usuario(
+            {
+                "nome": "Tecnico IFRS",
+                "email": "tecnico@ifrs.edu.br",
+                "senha": "SenhaTeste123",
+                "perfil": "TECNICO",
+            }
         )
-        self.auth_service.registrar_usuario(
-            nome="Coordenador IFRS",
-            email="coordenador@ifrs.edu.br",
-            senha="SenhaTeste123",
-            perfil="COORDENADOR",
+        self.coordenador = self.usuario_service.cadastrar_usuario(
+            {
+                "nome": "Coordenador IFRS",
+                "email": "coordenador@ifrs.edu.br",
+                "senha": "SenhaTeste123",
+                "perfil": "COORDENADOR",
+            }
         )
 
     def tearDown(self):
@@ -147,7 +155,77 @@ class AuthFlowTestCase(unittest.TestCase):
 
         self.assertEqual(200, response.status_code)
         self.assertIn(b"Usuario criado com sucesso", response.data)
+        self.assertIn(b"novo.professor@ifrs.edu.br", response.data)
         self.assertIsNotNone(self.auth_service.autenticar("novo.professor@ifrs.edu.br", "SenhaProfessor123"))
+
+    def test_coordenador_lista_usuarios(self):
+        self._login("coordenador@ifrs.edu.br")
+
+        response = self.client.get("/usuarios")
+
+        self.assertEqual(200, response.status_code)
+        self.assertIn(b"Usuarios", response.data)
+        self.assertIn(b"professor@ifrs.edu.br", response.data)
+        self.assertIn(b"tecnico@ifrs.edu.br", response.data)
+
+    def test_coordenador_atualiza_usuario_pela_interface(self):
+        self._login("coordenador@ifrs.edu.br")
+        csrf_token = self._csrf_token_from(f"/usuarios/{self.professor.id}/editar")
+
+        response = self.client.post(
+            f"/usuarios/{self.professor.id}/editar",
+            data={
+                "nome": "Professor Atualizado",
+                "email": "professor.atualizado@ifrs.edu.br",
+                "csrf_token": csrf_token,
+            },
+            follow_redirects=True,
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertIn(b"Usuario atualizado com sucesso.", response.data)
+        self.assertIsNotNone(self.auth_service.autenticar("professor.atualizado@ifrs.edu.br", "SenhaTeste123"))
+
+    def test_coordenador_altera_perfil_pela_interface(self):
+        self._login("coordenador@ifrs.edu.br")
+        csrf_token = self._csrf_token_from(f"/usuarios/{self.professor.id}/editar")
+
+        response = self.client.post(
+            f"/usuarios/{self.professor.id}/perfil",
+            data={"perfil": "TECNICO", "csrf_token": csrf_token},
+            follow_redirects=True,
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertIn(b"Perfil atualizado com sucesso.", response.data)
+        self.assertIn(b"TECNICO", response.data)
+
+    def test_coordenador_altera_status_pela_interface(self):
+        self._login("coordenador@ifrs.edu.br")
+        csrf_token = self._csrf_token_from("/usuarios")
+
+        response = self.client.post(
+            f"/usuarios/{self.tecnico.id}/status",
+            data={"ativo": "false", "csrf_token": csrf_token},
+            follow_redirects=True,
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertIn(b"Status do usuario atualizado com sucesso.", response.data)
+        self.assertIsNone(self.auth_service.autenticar("tecnico@ifrs.edu.br", "SenhaTeste123"))
+
+    def test_coordenador_define_permissao_dashboard_pela_interface(self):
+        self._login("coordenador@ifrs.edu.br")
+        csrf_token = self._csrf_token_from("/usuarios")
+
+        response = self.client.post(
+            f"/usuarios/{self.professor.id}/dashboard",
+            data={"pode_visualizar_dashboard": "true", "csrf_token": csrf_token},
+            follow_redirects=True,
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertIn(b"Permissao de dashboard atualizada com sucesso.", response.data)
 
     def test_usuario_sem_permissao_nao_acessa_criacao(self):
         self._login("tecnico@ifrs.edu.br")
@@ -174,6 +252,48 @@ class AuthFlowTestCase(unittest.TestCase):
         self.assertEqual(400, response.status_code)
         self.assertIn(b"Perfil de usuario invalido.", response.data)
         self.assertIsNone(self.auth_service.autenticar("aluno@ifrs.edu.br", "SenhaAluno123"))
+
+    def test_nao_cria_usuario_com_email_nao_institucional(self):
+        self._login("coordenador@ifrs.edu.br")
+        csrf_token = self._csrf_token_from("/usuarios/novo")
+
+        response = self.client.post(
+            "/usuarios/novo",
+            data={
+                "nome": "Usuario Externo",
+                "email": "externo@example.com",
+                "perfil": "PROFESSOR",
+                "senha": "SenhaUsuario123",
+                "csrf_token": csrf_token,
+            },
+        )
+
+        self.assertEqual(400, response.status_code)
+        self.assertIn(b"Email institucional invalido.", response.data)
+
+    def test_dashboard_exige_permissao(self):
+        self._login("professor@ifrs.edu.br")
+
+        response = self.client.get("/dashboard")
+
+        self.assertEqual(403, response.status_code)
+
+    def test_dashboard_permite_coordenador(self):
+        self._login("coordenador@ifrs.edu.br")
+
+        response = self.client.get("/dashboard")
+
+        self.assertEqual(200, response.status_code)
+        self.assertIn(b"Dashboard", response.data)
+
+    def test_dashboard_permite_usuario_com_permissao_adicional(self):
+        self.usuario_service.definir_permissao_dashboard(self.professor, True)
+        self._login("professor@ifrs.edu.br")
+
+        response = self.client.get("/dashboard")
+
+        self.assertEqual(200, response.status_code)
+        self.assertIn(b"Dashboard", response.data)
 
     def test_fluxo_completo_cria_usuario_logout_e_login_com_usuario_criado(self):
         self._login("coordenador@ifrs.edu.br")

@@ -15,6 +15,7 @@ class Usuario(db.Model):
         db.Enum(PerfilUsuario, name="perfil_usuario", native_enum=False, length=20),
         nullable=False,
     )
+    pode_visualizar_dashboard = db.Column(db.Boolean, nullable=False, default=False)
     ativo = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(
         db.DateTime(timezone=True),

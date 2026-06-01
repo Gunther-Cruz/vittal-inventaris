@@ -1,0 +1,283 @@
+@startuml
+
+left to right direction
+hide circle
+
+skinparam linetype ortho
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+skinparam nodesep 42
+skinparam ranksep 46
+
+skinparam entity {
+  BackgroundColor #F8F8F8
+  BorderColor #555555
+}
+
+title Diagrama Entidade-Relacionamento - VITTAL Inventaris
+
+entity "LABORATORIO" as LAB {
+  *id_laboratorio : INT <<PK>> {NOT NULL}
+  --
+  codigo_laboratorio : VARCHAR {NOT NULL, UNIQUE}
+  nome_laboratorio : VARCHAR {NOT NULL}
+  pavilhao : VARCHAR {NOT NULL}
+  ativo : BOOLEAN {NOT NULL}
+  observacao : TEXT {NULL}
+}
+
+entity "ESTACAO_TRABALHO" as EST {
+  *id_estacao : INT <<PK>> {NOT NULL}
+  --
+  id_laboratorio : INT <<FK>> {NOT NULL}
+  codigo_estacao : VARCHAR {NOT NULL}
+  id_gabinete_atual : INT <<FK>> {NULL, UNIQUE}
+  id_monitor_atual : INT <<FK>> {NULL, UNIQUE}
+  posicao_mapa_x : INT {NULL}
+  posicao_mapa_y : INT {NULL}
+  ativa : BOOLEAN {NOT NULL}
+  observacao : TEXT {NULL}
+}
+
+entity "GABINETE" as GAB {
+  *id_gabinete : INT <<PK>> {NOT NULL}
+  --
+  num_patrimonio : VARCHAR {NOT NULL, UNIQUE}
+  numero_serie : VARCHAR {NULL, UNIQUE}
+  fabricante : VARCHAR {NOT NULL}
+  modelo : VARCHAR {NOT NULL}
+  lote : VARCHAR {NULL}
+  data_compra : DATE {NULL}
+  processador_modelo : VARCHAR {NULL}
+  processador_frequencia_ghz : NUMERIC {NULL}
+  placa_mae_modelo : VARCHAR {NULL}
+  memoria_instalada_gb : NUMERIC {NULL}
+  memoria_tecnologia : VARCHAR {NULL}
+  memoria_velocidade_mhz : INT {NULL}
+  memoria_slots_total : INT {NULL}
+  memoria_slots_ocupacao : VARCHAR {NULL}
+  armazenamento_descricao : VARCHAR {NULL}
+  fonte_descricao : VARCHAR {NULL}
+  sistema_operacional : VARCHAR {NULL}
+  situacao_operacional : VARCHAR {NOT NULL}
+  glpi_computer_id : INT {NULL, UNIQUE}
+  glpi_sync_status : VARCHAR {NULL}
+  glpi_last_sync_at : TIMESTAMP {NULL}
+  observacao : TEXT {NULL}
+}
+
+entity "MONITOR" as MON {
+  *id_monitor : INT <<PK>> {NOT NULL}
+  --
+  num_patrimonio : VARCHAR {NOT NULL, UNIQUE}
+  numero_serie : VARCHAR {NULL, UNIQUE}
+  fabricante : VARCHAR {NOT NULL}
+  modelo : VARCHAR {NOT NULL}
+  polegadas : NUMERIC {NULL}
+  tipo_conexao : VARCHAR {NULL}
+  data_compra : DATE {NULL}
+  situacao_operacional : VARCHAR {NOT NULL}
+  glpi_monitor_id : INT {NULL, UNIQUE}
+  glpi_sync_status : VARCHAR {NULL}
+  glpi_last_sync_at : TIMESTAMP {NULL}
+  observacao : TEXT {NULL}
+}
+
+entity "ALOCACAO_GABINETE_ESTACAO" as AGE {
+  *id_alocacao_gabinete : INT <<PK>> {NOT NULL}
+  --
+  id_gabinete : INT <<FK>> {NOT NULL}
+  id_estacao : INT <<FK>> {NOT NULL}
+  id_tecnico_responsavel : INT <<FK>> {NOT NULL}
+  data_inicio : TIMESTAMP {NOT NULL}
+  data_fim : TIMESTAMP {NULL}
+  motivo_movimentacao : VARCHAR {NULL}
+  observacao : TEXT {NULL}
+}
+
+entity "ALOCACAO_MONITOR_ESTACAO" as AME {
+  *id_alocacao_monitor : INT <<PK>> {NOT NULL}
+  --
+  id_monitor : INT <<FK>> {NOT NULL}
+  id_estacao : INT <<FK>> {NOT NULL}
+  id_tecnico_responsavel : INT <<FK>> {NOT NULL}
+  data_inicio : TIMESTAMP {NOT NULL}
+  data_fim : TIMESTAMP {NULL}
+  motivo_movimentacao : VARCHAR {NULL}
+  observacao : TEXT {NULL}
+}
+
+entity "USUARIO" as USR {
+  *id_usuario : INT <<PK>> {NOT NULL}
+  --
+  nome : VARCHAR {NOT NULL}
+  email : VARCHAR {NOT NULL, UNIQUE}
+  senha_hash : VARCHAR {NOT NULL}
+  perfil : VARCHAR {NOT NULL}
+  pode_visualizar_dashboard : BOOLEAN {NOT NULL}
+  ativo : BOOLEAN {NOT NULL}
+  data_criacao : TIMESTAMP {NOT NULL}
+  data_atualizacao : TIMESTAMP {NOT NULL}
+}
+
+entity "CHAMADO" as CHA {
+  *id_chamado : INT <<PK>> {NOT NULL}
+  --
+  codigo_protocolo : VARCHAR {NOT NULL, UNIQUE}
+  id_usuario_abertura : INT <<FK>> {NULL}
+  nome_requerente : VARCHAR {NULL}
+  email_requerente : VARCHAR {NULL}
+  id_laboratorio : INT <<FK>> {NOT NULL}
+  id_estacao : INT <<FK>> {NULL}
+  id_tecnico_responsavel_atual : INT <<FK>> {NULL}
+  escopo_chamado : VARCHAR {NOT NULL}
+  titulo : VARCHAR {NOT NULL}
+  descricao_relatada : TEXT {NOT NULL}
+  prioridade : VARCHAR {NOT NULL}
+  urgencia : VARCHAR {NULL}
+  status_atual : VARCHAR {NOT NULL}
+  data_abertura : TIMESTAMP {NOT NULL}
+  data_encerramento : TIMESTAMP {NULL}
+  observacao_encerramento : TEXT {NULL}
+  glpi_ticket_id : INT {NULL, UNIQUE}
+  glpi_sync_status : VARCHAR {NULL}
+  glpi_last_sync_at : TIMESTAMP {NULL}
+}
+
+entity "HISTORICO_CHAMADO" as HCH {
+  *id_historico_chamado : INT <<PK>> {NOT NULL}
+  --
+  id_chamado : INT <<FK>> {NOT NULL}
+  id_usuario_responsavel : INT <<FK>> {NULL}
+  status_anterior : VARCHAR {NULL}
+  status_novo : VARCHAR {NOT NULL}
+  data_evento : TIMESTAMP {NOT NULL}
+  descricao_evento : VARCHAR {NULL}
+  observacao : TEXT {NULL}
+}
+
+entity "TIPO_PROBLEMA" as TPR {
+  *id_tipo_problema : INT <<PK>> {NOT NULL}
+  --
+  codigo : VARCHAR {NOT NULL, UNIQUE}
+  nome_problema : VARCHAR {NOT NULL}
+  escopo_ativo : VARCHAR {NOT NULL}
+  ativo : BOOLEAN {NOT NULL}
+  descricao : TEXT {NULL}
+}
+
+entity "ORDEM_SERVICO" as OS {
+  *id_ordem_servico : INT <<PK>> {NOT NULL}
+  --
+  id_chamado : INT <<FK>> {NULL}
+  id_tecnico_responsavel : INT <<FK>> {NOT NULL}
+  id_tipo_problema : INT <<FK>> {NOT NULL}
+  alvo_tipo : VARCHAR {NOT NULL}
+  id_gabinete : INT <<FK>> {NULL}
+  id_monitor : INT <<FK>> {NULL}
+  id_laboratorio : INT <<FK>> {NULL}
+  status_os : VARCHAR {NOT NULL}
+  tipo_manutencao : VARCHAR {NOT NULL}
+  data_abertura_os : TIMESTAMP {NOT NULL}
+  data_fechamento_os : TIMESTAMP {NULL}
+  diagnostico : TEXT {NULL}
+  servico_executado : TEXT {NULL}
+  observacao : TEXT {NULL}
+}
+
+entity "UPGRADE_GABINETE" as UPG {
+  *id_upgrade_gabinete : INT <<PK>> {NOT NULL}
+  --
+  id_gabinete : INT <<FK>> {NOT NULL}
+  id_tecnico_responsavel : INT <<FK>> {NOT NULL}
+  componente_alterado : VARCHAR {NOT NULL}
+  descricao_anterior : TEXT {NULL}
+  descricao_nova : TEXT {NULL}
+  data_upgrade : TIMESTAMP {NOT NULL}
+  observacao : TEXT {NULL}
+}
+
+entity "DESCARTE_ATIVO" as DSC {
+  *id_descarte : INT <<PK>> {NOT NULL}
+  --
+  tipo_ativo : VARCHAR {NOT NULL}
+  id_gabinete : INT <<FK>> {NULL}
+  id_monitor : INT <<FK>> {NULL}
+  id_tecnico_responsavel : INT <<FK>> {NOT NULL}
+  descricao_peca : VARCHAR {NULL}
+  data_descarte : TIMESTAMP {NOT NULL}
+  motivo_descarte : TEXT {NULL}
+  observacao : TEXT {NULL}
+}
+
+' =========================
+' Organização visual: 4 colunas
+' =========================
+
+LAB -[hidden]down- GAB
+GAB -[hidden]down- MON
+
+EST -[hidden]down- AGE
+AGE -[hidden]down- AME
+
+CHA -[hidden]down- HCH
+HCH -[hidden]down- USR
+
+OS -[hidden]down- TPR
+TPR -[hidden]down- UPG
+UPG -[hidden]down- DSC
+
+LAB -[hidden]right- EST
+EST -[hidden]right- CHA
+CHA -[hidden]right- OS
+
+GAB -[hidden]right- AGE
+AGE -[hidden]right- HCH
+HCH -[hidden]right- TPR
+
+MON -[hidden]right- AME
+AME -[hidden]right- USR
+USR -[hidden]right- UPG
+
+' =========================
+' Relacionamentos
+' =========================
+LAB "1" -- "0..*" EST : possui
+
+GAB "0..1" -- "0..1" EST : vinculo_atual
+MON "0..1" -- "0..1" EST : vinculo_atual
+
+GAB "1" -- "0..*" AGE : historico
+EST "1" -- "0..*" AGE : recebe
+USR "1" -- "0..*" AGE : movimenta
+
+MON "1" -- "0..*" AME : historico
+EST "1" -- "0..*" AME : recebe
+USR "1" -- "0..*" AME : movimenta
+
+USR "0..1" -- "0..*" CHA : abre_autenticado
+USR "0..1" -- "0..*" CHA : responsavel_atual
+
+LAB "1" -- "0..*" CHA : recebe
+EST "0..1" -- "0..*" CHA : recebe
+
+CHA "1" -- "0..*" HCH : gera
+USR "0..1" -- "0..*" HCH : registra
+
+CHA "0..1" -- "0..*" OS : origina
+USR "1" -- "0..*" OS : executa
+TPR "1" -- "0..*" OS : classifica
+
+GAB "0..1" -- "0..*" OS : alvo_opcional
+MON "0..1" -- "0..*" OS : alvo_opcional
+LAB "0..1" -- "0..*" OS : alvo_opcional
+
+GAB "1" -- "0..*" UPG : recebe
+USR "1" -- "0..*" UPG : realiza
+
+GAB "0..1" -- "0..*" DSC : descarta
+MON "0..1" -- "0..*" DSC : descarta
+USR "1" -- "0..*" DSC : registra
+
+@enduml

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Usuarios - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>Usuarios</h1>
+
+<p><a href="{{ url_for('usuarios.novo_usuario') }}">Novo usuario</a></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Email</th>
+      <th>Perfil</th>
+      <th>Status</th>
+      <th>Dashboard</th>
+      <th>Acoes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for usuario in usuarios %}
+      <tr>
+        <td>{{ usuario.nome }}</td>
+        <td>{{ usuario.email }}</td>
+        <td>{{ usuario.perfil.value }}</td>
+        <td>{% if usuario.ativo %}Ativo{% else %}Inativo{% endif %}</td>
+        <td>{% if usuario.pode_visualizar_dashboard or usuario.perfil.value == "COORDENADOR" %}Permitido{% else %}Bloqueado{% endif %}</td>
+        <td>
+          <a href="{{ url_for('usuarios.editar_usuario', usuario_id=usuario.id) }}">Editar</a>
+
+          <form method="post" action="{{ url_for('usuarios.alterar_status_usuario', usuario_id=usuario.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if usuario.ativo %}
+              <input type="hidden" name="ativo" value="false">
+              <button type="submit">Desativar</button>
+            {% else %}
+              <input type="hidden" name="ativo" value="true">
+              <button type="submit">Ativar</button>
+            {% endif %}
+          </form>
+
+          <form method="post" action="{{ url_for('usuarios.definir_permissao_dashboard', usuario_id=usuario.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if usuario.pode_visualizar_dashboard %}
+              <input type="hidden" name="pode_visualizar_dashboard" value="false">
+              <button type="submit">Bloquear dashboard</button>
+            {% else %}
+              <input type="hidden" name="pode_visualizar_dashboard" value="true">
+              <button type="submit">Permitir dashboard</button>
+            {% endif %}
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

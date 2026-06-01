@@ -2,8 +2,10 @@ import unittest
 
 from app import create_app
 from app.domain.enums import PerfilUsuario
+from app.domain.models import Usuario
 from app.extensions import db
 from app.services.auth_service import AuthService
+from app.services.usuario_service import UsuarioService
 
 
 class AuthServiceTestCase(unittest.TestCase):
@@ -26,11 +28,13 @@ class AuthServiceTestCase(unittest.TestCase):
         self.assertFalse(AuthService.verificar_senha("senha-errada", senha_hash))
 
     def test_registrar_usuario_com_perfil_valido(self):
-        usuario = AuthService().registrar_usuario(
-            nome="Tecnico IFRS",
-            email="TECNICO@IFRS.EDU.BR",
-            senha="SenhaTeste123",
-            perfil="TECNICO",
+        usuario = UsuarioService().cadastrar_usuario(
+            {
+                "nome": "Tecnico IFRS",
+                "email": "TECNICO@IFRS.EDU.BR",
+                "senha": "SenhaTeste123",
+                "perfil": "TECNICO",
+            }
         )
 
         self.assertIsNotNone(usuario.id)
@@ -40,12 +44,34 @@ class AuthServiceTestCase(unittest.TestCase):
 
     def test_nao_aceita_aluno_como_usuario_persistido(self):
         with self.assertRaises(ValueError):
-            AuthService().registrar_usuario(
-                nome="Aluno",
-                email="aluno@ifrs.edu.br",
-                senha="SenhaTeste123",
-                perfil="ALUNO",
+            UsuarioService().cadastrar_usuario(
+                {
+                    "nome": "Aluno",
+                    "email": "aluno@ifrs.edu.br",
+                    "senha": "SenhaTeste123",
+                    "perfil": "ALUNO",
+                }
             )
+
+    def test_auth_service_verifica_permissao_dashboard(self):
+        coordenador = Usuario(
+            nome="Coordenador",
+            email="coordenador@ifrs.edu.br",
+            senha_hash="hash",
+            perfil=PerfilUsuario.COORDENADOR,
+            ativo=True,
+        )
+        tecnico = Usuario(
+            nome="Tecnico",
+            email="tecnico@ifrs.edu.br",
+            senha_hash="hash",
+            perfil=PerfilUsuario.TECNICO,
+            pode_visualizar_dashboard=True,
+            ativo=True,
+        )
+
+        self.assertTrue(AuthService().verificar_permissao_dashboard(coordenador))
+        self.assertTrue(AuthService().verificar_permissao_dashboard(tecnico))
 
 
 if __name__ == "__main__":

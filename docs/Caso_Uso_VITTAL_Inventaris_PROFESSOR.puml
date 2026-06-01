@@ -1,0 +1,27 @@
+@startuml
+left to right direction
+title Diagrama de Caso de Uso - Ator Professor
+
+actor "Professor" as Professor
+
+rectangle "Sistema VITTAL Inventaris" {
+  usecase "Cadastrar conta" as UC1
+  usecase "Fazer login" as UC9
+  usecase "Visualizar Mapa dos Laboratórios\ne Status das Estações" as UC2
+  usecase "Registrar Chamado" as UC4
+  usecase "Consultar Histórico dos Próprios Chamados" as UC5
+  usecase "Consultar Histórico de Chamados do Laboratório" as UC6
+  usecase "Acompanhar Manutenção dos Laboratórios" as UC7
+  usecase "Visualizar Dashboards" as UC8
+}
+
+Professor --> UC1
+Professor --> UC2
+Professor --> UC4
+Professor --> UC5
+Professor --> UC6
+Professor --> UC7
+Professor --> UC8
+Professor --> UC9
+
+@enduml

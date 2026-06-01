@@ -1,0 +1,29 @@
+@startuml
+left to right direction
+title Diagrama de Caso de Uso - Ator Técnico
+
+together {
+  actor "Técnico" as Tecnico
+  actor "Professor" as Professor
+}
+
+Tecnico -[hidden]right- Professor
+Tecnico --|> Professor
+
+rectangle "Sistema VITTAL Inventaris" {
+  usecase "Gerenciar Chamados" as UC1
+  usecase "Gerenciar Manutenção" as UC2
+  usecase "Gerenciar Inventário" as UC3
+  usecase "Gerenciar Estação" as UC4
+  usecase "Gerenciar Laboratório" as UC5
+  usecase "Consultar Chamado por Protocolo" as UC6
+}
+
+Tecnico --> UC1
+Tecnico --> UC2
+Tecnico --> UC3
+Tecnico --> UC4
+Tecnico --> UC5
+Tecnico --> UC6
+
+@enduml

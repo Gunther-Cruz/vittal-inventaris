@@ -1,0 +1,154 @@
+@startuml
+
+left to right direction
+
+skinparam shadowing false
+skinparam actorStyle awesome
+skinparam BackgroundColor white
+skinparam packageStyle rectangle
+skinparam linetype splines
+
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam titleFontSize 17
+skinparam titleFontStyle bold
+
+skinparam nodesep 18
+skinparam ranksep 24
+
+skinparam actor {
+  BackgroundColor white
+  BorderColor #444444
+  FontColor black
+}
+
+skinparam usecase {
+  BackgroundColor white
+  BorderColor #555555
+  FontColor black
+}
+
+skinparam ArrowColor #222222
+skinparam ArrowThickness 1
+skinparam ArrowFontColor #222222
+skinparam ArrowFontSize 11
+
+title Diagrama de Casos de Uso - VITTAL Inventaris
+
+' =========================
+' Atores organizados pela herança
+' =========================
+actor "Coordenador" as CO
+actor "Técnico" as TC
+actor "Professor" as PR
+actor "Aluno" as AL
+
+CO -[hidden]down- TC
+TC -[hidden]down- PR
+PR -[hidden]down- AL
+
+' Herança entre atores
+CO --|> TC
+TC --|> PR
+
+' =========================
+' Casos do Coordenador
+' =========================
+usecase "Acompanhar Relatórios de Manutenção" as UC_RELMAN
+usecase "Gerenciar Permissões de Dashboard" as UC_PERMDASH
+
+UC_RELMAN -[hidden]down- UC_PERMDASH
+
+' =========================
+' Casos do Técnico
+' =========================
+usecase "Gerenciar Chamados" as UC_GERCH
+usecase "Gerenciar Manutenção" as UC_MANUT
+usecase "Gerenciar Inventário" as UC_INV
+usecase "Gerenciar Estação" as UC_EST
+usecase "Gerenciar Laboratório" as UC_LAB
+
+UC_GERCH -[hidden]down- UC_MANUT
+UC_MANUT -[hidden]down- UC_INV
+UC_INV -[hidden]down- UC_EST
+UC_EST -[hidden]down- UC_LAB
+
+' =========================
+' Casos do Professor
+' =========================
+usecase "Consultar Histórico dos Próprios Chamados" as UC_MYHIST
+usecase "Consultar Histórico de Chamados do Laboratório" as UC_HISTLAB
+usecase "Acompanhar Manutenção dos Laboratórios" as UC_ACOMP
+usecase "Visualizar Dashboards" as UC_DASH
+
+UC_MYHIST -[hidden]down- UC_HISTLAB
+UC_HISTLAB -[hidden]down- UC_ACOMP
+UC_ACOMP -[hidden]down- UC_DASH
+
+' =========================
+' Casos públicos / básicos
+' =========================
+usecase "Visualizar Mapa dos Laboratórios" as UC_MAP
+usecase "Visualizar Status das Estações" as UC_STATUS
+usecase "Registrar Chamado" as UC_REG
+usecase "Consultar Chamado por Protocolo" as UC_PROTO
+
+UC_MAP -[hidden]down- UC_STATUS
+UC_STATUS -[hidden]down- UC_REG
+UC_REG -[hidden]down- UC_PROTO
+
+' =========================
+' Alinhamento horizontal dos blocos
+' =========================
+UC_RELMAN -[hidden]right- UC_GERCH
+UC_GERCH -[hidden]right- UC_MYHIST
+UC_MYHIST -[hidden]right- UC_MAP
+
+' Ajustes finos de posição
+UC_PERMDASH -[hidden]right- UC_DASH
+UC_DASH -[hidden]right- UC_PROTO
+
+' =========================
+' Coordenador
+' =========================
+CO --> UC_RELMAN
+CO --> UC_PERMDASH
+CO --> UC_DASH
+CO --> UC_PROTO
+
+' =========================
+' Técnico
+' Herdadas do Professor + próprias
+' =========================
+TC --> UC_GERCH
+TC --> UC_MANUT
+TC --> UC_INV
+TC --> UC_EST
+TC --> UC_LAB
+TC --> UC_PROTO
+TC --> UC_DASH
+
+' =========================
+' Professor
+' =========================
+PR --> UC_MAP
+PR --> UC_STATUS
+PR --> UC_REG
+PR --> UC_MYHIST
+PR --> UC_HISTLAB
+PR --> UC_ACOMP
+PR --> UC_DASH
+
+' =========================
+' Aluno
+' =========================
+AL --> UC_MAP
+AL --> UC_STATUS
+AL --> UC_REG
+AL --> UC_PROTO
+
+' =========================
+' Relacionamentos
+' =========================
+UC_STATUS ..> UC_MAP : <<extend>>
+@enduml

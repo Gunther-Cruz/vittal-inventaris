@@ -1,0 +1,22 @@
+@startuml
+left to right direction
+
+together {
+  actor "Coordenador" as Coordenador
+  actor "Técnico" as Tecnico
+}
+
+Coordenador -[hidden]right- Tecnico
+Coordenador -right-|> Tecnico
+
+rectangle "Sistema VITTAL Inventaris" {
+  usecase "Acompanhar Relatórios de Manutenção" as UC2
+  usecase "Gerenciar Permissões de Dashboard" as UC4
+  usecase "Gerenciar permissões globais" as UC5
+}
+
+Coordenador --> UC2
+Coordenador --> UC4
+Coordenador --> UC5
+
+@enduml
