@@ -33,6 +33,16 @@ def pode_visualizar_dashboard(usuario) -> bool:
     return bool(getattr(usuario, "pode_visualizar_dashboard", False))
 
 
+def can_view_laboratories(usuario) -> bool:
+    """Any active authenticated user can access the internal laboratory view."""
+    return bool(usuario and usuario.is_authenticated and usuario.ativo)
+
+
+def can_manage_laboratories(usuario) -> bool:
+    """Technicians and coordinators can manage institutional laboratories."""
+    return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO, PerfilUsuario.COORDENADOR)
+
+
 def perfis_criaveis_por(usuario) -> tuple[PerfilUsuario, ...]:
     if not pode_criar_usuarios(usuario):
         return ()

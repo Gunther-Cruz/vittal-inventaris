@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}New laboratory - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>New laboratory</h1>
+
+<form method="post" action="{{ url_for('laboratories.create_laboratory') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <label for="code">Code</label>
+  <input id="code" name="code" type="text" required>
+
+  <label for="name">Name</label>
+  <input id="name" name="name" type="text" required>
+
+  <label for="pavilion">Pavilion</label>
+  <input id="pavilion" name="pavilion" type="text" required>
+
+  <label for="notes">Notes</label>
+  <textarea id="notes" name="notes"></textarea>
+
+  <button type="submit">Create laboratory</button>
+</form>
+{% endblock %}

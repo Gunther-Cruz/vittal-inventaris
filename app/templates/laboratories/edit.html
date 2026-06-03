@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Edit laboratory - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>Edit laboratory</h1>
+
+<form method="post" action="{{ url_for('laboratories.update_laboratory', laboratory_id=laboratory.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <label for="code">Code</label>
+  <input id="code" name="code" type="text" value="{{ laboratory.code }}" required>
+
+  <label for="name">Name</label>
+  <input id="name" name="name" type="text" value="{{ laboratory.name }}" required>
+
+  <label for="pavilion">Pavilion</label>
+  <input id="pavilion" name="pavilion" type="text" value="{{ laboratory.pavilion }}" required>
+
+  <label for="notes">Notes</label>
+  <textarea id="notes" name="notes">{{ laboratory.notes or "" }}</textarea>
+
+  <button type="submit">Save laboratory</button>
+</form>
+
+<p><a href="{{ url_for('laboratories.list_laboratories') }}">Back to laboratories</a></p>
+{% endblock %}

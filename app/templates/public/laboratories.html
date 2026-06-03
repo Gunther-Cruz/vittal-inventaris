@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>VITTAL Inventaris</h1>
+<p>Selecione o laboratorio para localizar a estacao e registrar um chamado.</p>
+
+<section aria-label="Laboratorios">
+  {% if laboratories %}
+    <ul>
+      {% for laboratory in laboratories %}
+        <li>
+          <strong>{{ laboratory.code }}</strong>
+          <span>{{ laboratory.name }}</span>
+          <span>{{ laboratory.pavilion }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Nenhum laboratorio ativo disponivel.</p>
+  {% endif %}
+</section>
+{% endblock %}
