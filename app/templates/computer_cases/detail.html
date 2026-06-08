@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Computer case - {{ computer_case.asset_tag }}{% endblock %}
+
+{% block content %}
+<h1>Computer case - {{ computer_case.asset_tag }}</h1>
+
+<dl>
+  <dt>Asset tag</dt>
+  <dd>{{ computer_case.asset_tag }}</dd>
+  <dt>Serial number</dt>
+  <dd>{{ computer_case.serial_number or "Not defined" }}</dd>
+  <dt>Manufacturer</dt>
+  <dd>{{ computer_case.manufacturer }}</dd>
+  <dt>Model</dt>
+  <dd>{{ computer_case.model }}</dd>
+  <dt>Batch</dt>
+  <dd>{{ computer_case.batch or "Not defined" }}</dd>
+  <dt>Purchase date</dt>
+  <dd>{{ computer_case.purchase_date or "Not defined" }}</dd>
+  <dt>Processor</dt>
+  <dd>{{ computer_case.processor_model or "Not defined" }}{% if computer_case.processor_frequency_ghz is not none %} - {{ computer_case.processor_frequency_ghz }} GHz{% endif %}</dd>
+  <dt>Motherboard</dt>
+  <dd>{{ computer_case.motherboard_model or "Not defined" }}</dd>
+  <dt>Memory</dt>
+  <dd>
+    {{ computer_case.installed_memory_gb or "Not defined" }} GB
+    {% if computer_case.memory_technology %} {{ computer_case.memory_technology }}{% endif %}
+    {% if computer_case.memory_speed_mhz %} {{ computer_case.memory_speed_mhz }} MHz{% endif %}
+  </dd>
+  <dt>Memory slots</dt>
+  <dd>{{ computer_case.memory_slots_usage or "Not defined" }}{% if computer_case.memory_slots_total is not none %} / {{ computer_case.memory_slots_total }} total{% endif %}</dd>
+  <dt>Storage</dt>
+  <dd>{{ computer_case.storage_description or "Not defined" }}</dd>
+  <dt>Power supply</dt>
+  <dd>{{ computer_case.power_supply_description or "Not defined" }}</dd>
+  <dt>Operating system</dt>
+  <dd>{{ computer_case.operating_system or "Not defined" }}</dd>
+  <dt>Operational status</dt>
+  <dd>{{ computer_case.operational_status.value }}</dd>
+  <dt>Notes</dt>
+  <dd>{{ computer_case.notes or "Not defined" }}</dd>
+</dl>
+
+{% if current_user.perfil.value == "TECNICO" %}
+  <p><a href="{{ url_for('computer_cases.edit_computer_case', computer_case_id=computer_case.id) }}">Edit computer case</a></p>
+{% endif %}
+<p><a href="{{ url_for('computer_cases.list_computer_cases') }}">Back to computer cases</a></p>
+{% endblock %}

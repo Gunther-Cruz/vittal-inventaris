@@ -1,6 +1,10 @@
 from collections.abc import Mapping
+from datetime import date
+from decimal import Decimal, InvalidOperation
 
-from app.domain.models import Laboratory, Workstation
+from app.domain.enums import OperationalStatus
+from app.domain.models import ComputerCase, Laboratory, Workstation
+from app.repositories.computer_case_repository import ComputerCaseRepository
 from app.repositories.laboratory_repository import LaboratoryRepository
 from app.repositories.workstation_repository import WorkstationRepository
 
@@ -12,9 +16,11 @@ class InventoryService:
         self,
         laboratory_repository: LaboratoryRepository | None = None,
         workstation_repository: WorkstationRepository | None = None,
+        computer_case_repository: ComputerCaseRepository | None = None,
     ) -> None:
         self.laboratory_repository = laboratory_repository or LaboratoryRepository()
         self.workstation_repository = workstation_repository or WorkstationRepository()
+        self.computer_case_repository = computer_case_repository or ComputerCaseRepository()
 
     # -------------------------------------------------------------------------
     # Laboratories
@@ -131,7 +137,101 @@ class InventoryService:
     # Computer cases
     # -------------------------------------------------------------------------
 
-    # Computer case use cases must follow the DER and the class diagram.
+    def create_computer_case(self, data: Mapping[str, object]) -> ComputerCase:
+        computer_case = self._build_computer_case(data)
+        self._ensure_unique_computer_case_identifiers(computer_case)
+        return self.computer_case_repository.save(computer_case)
+
+    def update_computer_case(
+        self,
+        computer_case: ComputerCase,
+        data: Mapping[str, object],
+    ) -> ComputerCase:
+        self._apply_computer_case_data(computer_case, data)
+        self._ensure_unique_computer_case_identifiers(computer_case)
+        return self.computer_case_repository.commit(computer_case)
+
+    def set_computer_case_status(
+        self,
+        computer_case: ComputerCase,
+        operational_status: object,
+    ) -> ComputerCase:
+        computer_case.operational_status = self._normalize_operational_status(operational_status)
+        return self.computer_case_repository.commit(computer_case)
+
+    def list_computer_cases(self) -> list[ComputerCase]:
+        return self.computer_case_repository.list_all()
+
+    def get_computer_case(self, computer_case_id: int) -> ComputerCase:
+        computer_case = self.computer_case_repository.find_by_id(computer_case_id)
+        if computer_case is None:
+            raise LookupError("Computer case not found.")
+
+        return computer_case
+
+    def _build_computer_case(self, data: Mapping[str, object]) -> ComputerCase:
+        computer_case = ComputerCase()
+        self._apply_computer_case_data(computer_case, data)
+        return computer_case
+
+    def _apply_computer_case_data(
+        self,
+        computer_case: ComputerCase,
+        data: Mapping[str, object],
+    ) -> None:
+        computer_case.asset_tag = self._normalize_required_text(
+            data.get("asset_tag", ""),
+            "Asset tag is required.",
+        ).upper()
+        computer_case.serial_number = self._normalize_optional_text(
+            data.get("serial_number", ""),
+            uppercase=True,
+        )
+        computer_case.manufacturer = self._normalize_required_text(
+            data.get("manufacturer", ""),
+            "Manufacturer is required.",
+        )
+        computer_case.model = self._normalize_required_text(data.get("model", ""), "Model is required.")
+        computer_case.batch = self._normalize_optional_text(data.get("batch", ""))
+        computer_case.purchase_date = self._normalize_optional_date(data.get("purchase_date", ""))
+        computer_case.processor_model = self._normalize_optional_text(data.get("processor_model", ""))
+        computer_case.processor_frequency_ghz = self._normalize_optional_decimal(
+            data.get("processor_frequency_ghz", ""),
+            "Processor frequency must be a valid decimal number.",
+        )
+        computer_case.motherboard_model = self._normalize_optional_text(data.get("motherboard_model", ""))
+        computer_case.installed_memory_gb = self._normalize_optional_decimal(
+            data.get("installed_memory_gb", ""),
+            "Installed memory must be a valid decimal number.",
+        )
+        computer_case.memory_technology = self._normalize_optional_text(data.get("memory_technology", ""))
+        computer_case.memory_speed_mhz = self._normalize_optional_int(
+            data.get("memory_speed_mhz", ""),
+            "Memory speed must be an integer.",
+        )
+        computer_case.memory_slots_total = self._normalize_optional_int(
+            data.get("memory_slots_total", ""),
+            "Memory slot total must be an integer.",
+        )
+        computer_case.memory_slots_usage = self._normalize_optional_text(data.get("memory_slots_usage", ""))
+        computer_case.storage_description = self._normalize_optional_text(data.get("storage_description", ""))
+        computer_case.power_supply_description = self._normalize_optional_text(
+            data.get("power_supply_description", ""),
+        )
+        computer_case.operating_system = self._normalize_optional_text(data.get("operating_system", ""))
+        computer_case.operational_status = self._normalize_operational_status(
+            data.get("operational_status", OperationalStatus.EM_FUNCIONAMENTO.value),
+        )
+        computer_case.notes = self._normalize_optional_text(data.get("notes", ""))
+
+    def _ensure_unique_computer_case_identifiers(self, computer_case: ComputerCase) -> None:
+        existing_asset = self.computer_case_repository.find_by_asset_tag(computer_case.asset_tag)
+        if existing_asset is not None and existing_asset.id != computer_case.id:
+            raise ValueError("Asset tag already exists.")
+
+        existing_serial = self.computer_case_repository.find_by_serial_number(computer_case.serial_number)
+        if existing_serial is not None and existing_serial.id != computer_case.id:
+            raise ValueError("Serial number already exists.")
 
     # -------------------------------------------------------------------------
     # Monitors
@@ -166,12 +266,15 @@ class InventoryService:
         return normalized
 
     @staticmethod
-    def _normalize_optional_text(value: object) -> str | None:
+    def _normalize_optional_text(value: object, uppercase: bool = False) -> str | None:
         normalized = str(value).strip()
+        if uppercase:
+            normalized = normalized.upper()
+
         return normalized or None
 
     @staticmethod
-    def _normalize_optional_int(value: object) -> int | None:
+    def _normalize_optional_int(value: object, message: str = "Map positions must be integers.") -> int | None:
         normalized = str(value).strip()
         if not normalized:
             return None
@@ -179,4 +282,34 @@ class InventoryService:
         try:
             return int(normalized)
         except ValueError as exc:
-            raise ValueError("Map positions must be integers.") from exc
+            raise ValueError(message) from exc
+
+    @staticmethod
+    def _normalize_optional_decimal(value: object, message: str) -> Decimal | None:
+        normalized = str(value).strip().replace(",", ".")
+        if not normalized:
+            return None
+
+        try:
+            return Decimal(normalized)
+        except InvalidOperation as exc:
+            raise ValueError(message) from exc
+
+    @staticmethod
+    def _normalize_optional_date(value: object) -> date | None:
+        normalized = str(value).strip()
+        if not normalized:
+            return None
+
+        try:
+            return date.fromisoformat(normalized)
+        except ValueError as exc:
+            raise ValueError("Purchase date must use YYYY-MM-DD.") from exc
+
+    @staticmethod
+    def _normalize_operational_status(value: object) -> OperationalStatus:
+        normalized = str(value).strip().upper()
+        try:
+            return OperationalStatus(normalized)
+        except ValueError as exc:
+            raise ValueError("Invalid operational status.") from exc

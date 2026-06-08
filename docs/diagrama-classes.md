@@ -67,6 +67,16 @@ Classe de software abstrata para concentrar o que gabinete e monitor tem em comu
 
 Essa abstracao organiza o dominio, mas nao obriga a existencia de uma tabela unica no banco.
 
+Na implementacao atual, `AtivoTI` e materializado como uma abstracao de codigo por
+meio de `ITAssetMixin`. Isso significa que `ComputerCase` herda os atributos comuns
+de ativo, e `Monitor` devera herdar a mesma base quando for implementado.
+
+A decisao aprovada foi nao criar uma tabela relacional `ativo_ti` neste momento.
+Cada ativo concreto mantem sua propria tabela do DER, como `gabinete` e futuramente
+`monitor`, enquanto o codigo reaproveita os campos comuns. Essa escolha reduz a
+complexidade de joins e migrations agora, preserva aderencia ao DER atual e ainda
+mantem o sistema escalavel para novos tipos de ativo.
+
 ### Gabinete
 
 Representa o ativo computacional principal.

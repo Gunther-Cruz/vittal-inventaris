@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}New computer case - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>New computer case</h1>
+
+<form method="post" action="{{ url_for('computer_cases.create_computer_case') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% include "computer_cases/_form.html" %}
+  <button type="submit">Create computer case</button>
+</form>
+
+<p><a href="{{ url_for('computer_cases.list_computer_cases') }}">Back to computer cases</a></p>
+{% endblock %}

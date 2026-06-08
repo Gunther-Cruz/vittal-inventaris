@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Edit computer case - {{ computer_case.asset_tag }}{% endblock %}
+
+{% block content %}
+<h1>Edit computer case - {{ computer_case.asset_tag }}</h1>
+
+<form method="post" action="{{ url_for('computer_cases.update_computer_case', computer_case_id=computer_case.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% include "computer_cases/_form.html" %}
+  <button type="submit">Update computer case</button>
+</form>
+
+<p><a href="{{ url_for('computer_cases.show_computer_case', computer_case_id=computer_case.id) }}">Back to details</a></p>
+{% endblock %}
