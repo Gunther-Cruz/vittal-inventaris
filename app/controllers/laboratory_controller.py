@@ -82,7 +82,11 @@ def internal_laboratory_map(laboratory_id: int):
     """Internal map placeholder that will receive workstation details later."""
     inventory_service = InventoryService()
     laboratory = _get_laboratory_or_404(inventory_service, laboratory_id)
-    return render_template("laboratories/map.html", laboratory=laboratory)
+    return render_template(
+        "laboratories/map.html",
+        laboratory=laboratory,
+        workstations=inventory_service.list_workstations_by_laboratory(laboratory),
+    )
 
 
 def _get_laboratory_or_404(inventory_service: InventoryService, laboratory_id: int):

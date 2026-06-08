@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Workstations - {{ laboratory.code }}{% endblock %}
+
+{% block content %}
+<h1>Workstations - {{ laboratory.code }}</h1>
+
+<p><a href="{{ url_for('workstations.new_workstation', laboratory_id=laboratory.id) }}">New workstation</a></p>
+<p><a href="{{ url_for('laboratories.internal_laboratory_map', laboratory_id=laboratory.id) }}">Internal map</a></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Position</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for workstation in workstations %}
+      <tr>
+        <td>{{ workstation.code }}</td>
+        <td>
+          {% if workstation.map_position_x is not none and workstation.map_position_y is not none %}
+            {{ workstation.map_position_x }}, {{ workstation.map_position_y }}
+          {% else %}
+            Not defined
+          {% endif %}
+        </td>
+        <td>{% if workstation.active %}Active{% else %}Inactive{% endif %}</td>
+        <td>
+          <a href="{{ url_for('workstations.edit_workstation', workstation_id=workstation.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('workstations.update_workstation_status', workstation_id=workstation.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if workstation.active %}
+              <input type="hidden" name="active" value="false">
+              <button type="submit">Deactivate</button>
+            {% else %}
+              <input type="hidden" name="active" value="true">
+              <button type="submit">Reactivate</button>
+            {% endif %}
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

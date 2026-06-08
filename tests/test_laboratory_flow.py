@@ -206,7 +206,7 @@ class LaboratoryFlowTestCase(unittest.TestCase):
 
         self.assertEqual(302, anonymous_response.status_code)
         self.assertEqual(200, professor_response.status_code)
-        self.assertIn(b"Internal laboratory map placeholder", professor_response.data)
+        self.assertIn(b"Internal laboratory map.", professor_response.data)
 
     def _login(self, email: str):
         csrf_token = self._csrf_token_from("/auth/login")

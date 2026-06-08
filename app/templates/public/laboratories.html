@@ -11,7 +11,9 @@
     <ul>
       {% for laboratory in laboratories %}
         <li>
-          <strong>{{ laboratory.code }}</strong>
+          <a href="{{ url_for('public.public_workstations', laboratory_id=laboratory.id) }}">
+            <strong>{{ laboratory.code }}</strong>
+          </a>
           <span>{{ laboratory.name }}</span>
           <span>{{ laboratory.pavilion }}</span>
         </li>

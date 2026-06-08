@@ -26,6 +26,7 @@
         <td>{% if laboratory.active %}Active{% else %}Inactive{% endif %}</td>
         <td>
           <a href="{{ url_for('laboratories.internal_laboratory_map', laboratory_id=laboratory.id) }}">Map</a>
+          <a href="{{ url_for('workstations.list_workstations', laboratory_id=laboratory.id) }}">Workstations</a>
           <a href="{{ url_for('laboratories.edit_laboratory', laboratory_id=laboratory.id) }}">Edit</a>
 
           <form method="post" action="{{ url_for('laboratories.update_laboratory_status', laboratory_id=laboratory.id) }}">

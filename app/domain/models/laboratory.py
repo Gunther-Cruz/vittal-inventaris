@@ -12,6 +12,12 @@ class Laboratory(db.Model):
     pavilion = db.Column("pavilhao", db.String(80), nullable=False)
     active = db.Column("ativo", db.Boolean, nullable=False, default=True)
     notes = db.Column("observacao", db.Text, nullable=True)
+    workstations = db.relationship(
+        "Workstation",
+        back_populates="laboratory",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
 
     def __repr__(self) -> str:
         return f"<Laboratory id={self.id!r} code={self.code!r} active={self.active!r}>"

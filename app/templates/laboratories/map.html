@@ -4,5 +4,23 @@
 
 {% block content %}
 <h1>{{ laboratory.code }} - {{ laboratory.name }}</h1>
-<p>Internal laboratory map placeholder. Workstation positions will be rendered here in the next block.</p>
+<p>Internal laboratory map. Asset and ticket details will be added in future blocks.</p>
+
+{% if workstations %}
+  <ul>
+    {% for workstation in workstations %}
+      <li>
+        <strong>{{ workstation.code }}</strong>
+        <span>{% if workstation.active %}Active{% else %}Inactive{% endif %}</span>
+        {% if workstation.map_position_x is not none and workstation.map_position_y is not none %}
+          <span>Position: {{ workstation.map_position_x }}, {{ workstation.map_position_y }}</span>
+        {% else %}
+          <span>Position not defined</span>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No workstations registered for this laboratory.</p>
+{% endif %}
 {% endblock %}

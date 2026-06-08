@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}New workstation - {{ laboratory.code }}{% endblock %}
+
+{% block content %}
+<h1>New workstation - {{ laboratory.code }}</h1>
+
+<form method="post" action="{{ url_for('workstations.create_workstation', laboratory_id=laboratory.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <label for="code">Code</label>
+  <input id="code" name="code" type="text" required>
+
+  <label for="map_position_x">Map position X</label>
+  <input id="map_position_x" name="map_position_x" type="number">
+
+  <label for="map_position_y">Map position Y</label>
+  <input id="map_position_y" name="map_position_y" type="number">
+
+  <label for="notes">Notes</label>
+  <textarea id="notes" name="notes"></textarea>
+
+  <button type="submit">Create workstation</button>
+</form>
+{% endblock %}

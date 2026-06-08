@@ -43,6 +43,16 @@ def can_manage_laboratories(usuario) -> bool:
     return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO, PerfilUsuario.COORDENADOR)
 
 
+def can_view_workstations(usuario) -> bool:
+    """Any active authenticated user can access internal workstation views."""
+    return bool(usuario and usuario.is_authenticated and usuario.ativo)
+
+
+def can_manage_workstations(usuario) -> bool:
+    """Technicians and coordinators can manage workstation positions."""
+    return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO, PerfilUsuario.COORDENADOR)
+
+
 def perfis_criaveis_por(usuario) -> tuple[PerfilUsuario, ...]:
     if not pode_criar_usuarios(usuario):
         return ()

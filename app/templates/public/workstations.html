@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ laboratory.code }} - Workstations{% endblock %}
+
+{% block content %}
+<h1>{{ laboratory.code }} - {{ laboratory.name }}</h1>
+<p>Selecione a estacao para continuar o registro do chamado.</p>
+
+<section aria-label="Estacoes">
+  {% if workstations %}
+    <ul>
+      {% for workstation in workstations %}
+        <li>
+          <strong>{{ workstation.code }}</strong>
+          {% if workstation.map_position_x is not none and workstation.map_position_y is not none %}
+            <span>Posicao: {{ workstation.map_position_x }}, {{ workstation.map_position_y }}</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Nenhuma estacao ativa disponivel neste laboratorio.</p>
+  {% endif %}
+</section>
+
+<p><a href="{{ url_for('public.home') }}">Voltar para laboratorios</a></p>
+{% endblock %}

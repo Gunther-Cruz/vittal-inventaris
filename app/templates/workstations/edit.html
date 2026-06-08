@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Edit workstation - {{ workstation.code }}{% endblock %}
+
+{% block content %}
+<h1>Edit workstation - {{ workstation.code }}</h1>
+
+<form method="post" action="{{ url_for('workstations.update_workstation', workstation_id=workstation.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <label for="code">Code</label>
+  <input id="code" name="code" type="text" value="{{ workstation.code }}" required>
+
+  <label for="map_position_x">Map position X</label>
+  <input id="map_position_x" name="map_position_x" type="number" value="{{ workstation.map_position_x or '' }}">
+
+  <label for="map_position_y">Map position Y</label>
+  <input id="map_position_y" name="map_position_y" type="number" value="{{ workstation.map_position_y or '' }}">
+
+  <label for="notes">Notes</label>
+  <textarea id="notes" name="notes">{{ workstation.notes or "" }}</textarea>
+
+  <button type="submit">Save workstation</button>
+</form>
+
+<p><a href="{{ url_for('workstations.list_workstations', laboratory_id=workstation.laboratory_id) }}">Back to workstations</a></p>
+{% endblock %}
