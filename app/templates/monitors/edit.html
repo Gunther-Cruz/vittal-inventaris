@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Edit monitor - {{ monitor.asset_tag }}{% endblock %}
+
+{% block content %}
+<h1>Edit monitor - {{ monitor.asset_tag }}</h1>
+
+<form method="post" action="{{ url_for('monitors.update_monitor', monitor_id=monitor.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% include "monitors/_form.html" %}
+  <button type="submit">Update monitor</button>
+</form>
+
+<p><a href="{{ url_for('monitors.show_monitor', monitor_id=monitor.id) }}">Back to details</a></p>
+{% endblock %}

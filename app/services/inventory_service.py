@@ -2,10 +2,11 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
-from app.domain.enums import OperationalStatus
-from app.domain.models import ComputerCase, Laboratory, Workstation
+from app.domain.enums import DisplayConnection, OperationalStatus
+from app.domain.models import ComputerCase, Laboratory, Monitor, Workstation
 from app.repositories.computer_case_repository import ComputerCaseRepository
 from app.repositories.laboratory_repository import LaboratoryRepository
+from app.repositories.monitor_repository import MonitorRepository
 from app.repositories.workstation_repository import WorkstationRepository
 
 
@@ -17,10 +18,12 @@ class InventoryService:
         laboratory_repository: LaboratoryRepository | None = None,
         workstation_repository: WorkstationRepository | None = None,
         computer_case_repository: ComputerCaseRepository | None = None,
+        monitor_repository: MonitorRepository | None = None,
     ) -> None:
         self.laboratory_repository = laboratory_repository or LaboratoryRepository()
         self.workstation_repository = workstation_repository or WorkstationRepository()
         self.computer_case_repository = computer_case_repository or ComputerCaseRepository()
+        self.monitor_repository = monitor_repository or MonitorRepository()
 
     # -------------------------------------------------------------------------
     # Laboratories
@@ -237,7 +240,68 @@ class InventoryService:
     # Monitors
     # -------------------------------------------------------------------------
 
-    # Monitor use cases will be implemented as a separate asset flow.
+    def create_monitor(self, data: Mapping[str, object]) -> Monitor:
+        monitor = self._build_monitor(data)
+        self._ensure_unique_monitor_identifiers(monitor)
+        return self.monitor_repository.save(monitor)
+
+    def update_monitor(self, monitor: Monitor, data: Mapping[str, object]) -> Monitor:
+        self._apply_monitor_data(monitor, data)
+        self._ensure_unique_monitor_identifiers(monitor)
+        return self.monitor_repository.commit(monitor)
+
+    def set_monitor_status(self, monitor: Monitor, operational_status: object) -> Monitor:
+        monitor.operational_status = self._normalize_operational_status(operational_status)
+        return self.monitor_repository.commit(monitor)
+
+    def list_monitors(self) -> list[Monitor]:
+        return self.monitor_repository.list_all()
+
+    def get_monitor(self, monitor_id: int) -> Monitor:
+        monitor = self.monitor_repository.find_by_id(monitor_id)
+        if monitor is None:
+            raise LookupError("Monitor not found.")
+
+        return monitor
+
+    def _build_monitor(self, data: Mapping[str, object]) -> Monitor:
+        monitor = Monitor()
+        self._apply_monitor_data(monitor, data)
+        return monitor
+
+    def _apply_monitor_data(self, monitor: Monitor, data: Mapping[str, object]) -> None:
+        monitor.asset_tag = self._normalize_required_text(
+            data.get("asset_tag", ""),
+            "Asset tag is required.",
+        ).upper()
+        monitor.serial_number = self._normalize_optional_text(
+            data.get("serial_number", ""),
+            uppercase=True,
+        )
+        monitor.manufacturer = self._normalize_required_text(
+            data.get("manufacturer", ""),
+            "Manufacturer is required.",
+        )
+        monitor.model = self._normalize_required_text(data.get("model", ""), "Model is required.")
+        monitor.purchase_date = self._normalize_optional_date(data.get("purchase_date", ""))
+        monitor.screen_size_inches = self._normalize_optional_decimal(
+            data.get("screen_size_inches", ""),
+            "Screen size must be a valid decimal number.",
+        )
+        monitor.display_connection = self._normalize_display_connection(data.get("display_connection", ""))
+        monitor.operational_status = self._normalize_operational_status(
+            data.get("operational_status", OperationalStatus.EM_FUNCIONAMENTO.value),
+        )
+        monitor.notes = self._normalize_optional_text(data.get("notes", ""))
+
+    def _ensure_unique_monitor_identifiers(self, monitor: Monitor) -> None:
+        existing_asset = self.monitor_repository.find_by_asset_tag(monitor.asset_tag)
+        if existing_asset is not None and existing_asset.id != monitor.id:
+            raise ValueError("Asset tag already exists.")
+
+        existing_serial = self.monitor_repository.find_by_serial_number(monitor.serial_number)
+        if existing_serial is not None and existing_serial.id != monitor.id:
+            raise ValueError("Serial number already exists.")
 
     # -------------------------------------------------------------------------
     # Current bindings and movements
@@ -313,3 +377,14 @@ class InventoryService:
             return OperationalStatus(normalized)
         except ValueError as exc:
             raise ValueError("Invalid operational status.") from exc
+
+    @staticmethod
+    def _normalize_display_connection(value: object) -> DisplayConnection | None:
+        normalized = str(value).strip().upper()
+        if not normalized:
+            return None
+
+        try:
+            return DisplayConnection(normalized)
+        except ValueError as exc:
+            raise ValueError("Invalid display connection.") from exc

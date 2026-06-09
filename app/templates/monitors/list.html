@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Monitors - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>Monitors</h1>
+
+{% if current_user.perfil.value == "TECNICO" %}
+  <p><a href="{{ url_for('monitors.new_monitor') }}">New monitor</a></p>
+{% endif %}
+
+<table>
+  <thead>
+    <tr>
+      <th>Asset tag</th>
+      <th>Serial number</th>
+      <th>Manufacturer</th>
+      <th>Model</th>
+      <th>Connection</th>
+      <th>Operational status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for monitor in monitors %}
+      <tr>
+        <td>{{ monitor.asset_tag }}</td>
+        <td>{{ monitor.serial_number or "Not defined" }}</td>
+        <td>{{ monitor.manufacturer }}</td>
+        <td>{{ monitor.model }}</td>
+        <td>{{ monitor.display_connection.value if monitor.display_connection else "Not defined" }}</td>
+        <td>{{ monitor.operational_status.value }}</td>
+        <td>
+          <a href="{{ url_for('monitors.show_monitor', monitor_id=monitor.id) }}">Details</a>
+          {% if current_user.perfil.value == "TECNICO" %}
+            <a href="{{ url_for('monitors.edit_monitor', monitor_id=monitor.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('monitors.update_monitor_status', monitor_id=monitor.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <select name="operational_status">
+                {% for status in statuses %}
+                  <option value="{{ status.value }}" {% if monitor.operational_status == status %}selected{% endif %}>{{ status.value }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit">Update status</button>
+            </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

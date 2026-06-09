@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Monitor - {{ monitor.asset_tag }}{% endblock %}
+
+{% block content %}
+<h1>Monitor - {{ monitor.asset_tag }}</h1>
+
+<dl>
+  <dt>Asset tag</dt>
+  <dd>{{ monitor.asset_tag }}</dd>
+  <dt>Serial number</dt>
+  <dd>{{ monitor.serial_number or "Not defined" }}</dd>
+  <dt>Manufacturer</dt>
+  <dd>{{ monitor.manufacturer }}</dd>
+  <dt>Model</dt>
+  <dd>{{ monitor.model }}</dd>
+  <dt>Purchase date</dt>
+  <dd>{{ monitor.purchase_date or "Not defined" }}</dd>
+  <dt>Screen size</dt>
+  <dd>{% if monitor.screen_size_inches is not none %}{{ monitor.screen_size_inches }} inches{% else %}Not defined{% endif %}</dd>
+  <dt>Display connection</dt>
+  <dd>{{ monitor.display_connection.value if monitor.display_connection else "Not defined" }}</dd>
+  <dt>Operational status</dt>
+  <dd>{{ monitor.operational_status.value }}</dd>
+  <dt>Notes</dt>
+  <dd>{{ monitor.notes or "Not defined" }}</dd>
+</dl>
+
+{% if current_user.perfil.value == "TECNICO" %}
+  <p><a href="{{ url_for('monitors.edit_monitor', monitor_id=monitor.id) }}">Edit monitor</a></p>
+{% endif %}
+<p><a href="{{ url_for('monitors.list_monitors') }}">Back to monitors</a></p>
+{% endblock %}

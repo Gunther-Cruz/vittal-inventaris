@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}New monitor - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>New monitor</h1>
+
+<form method="post" action="{{ url_for('monitors.create_monitor') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% include "monitors/_form.html" %}
+  <button type="submit">Create monitor</button>
+</form>
+
+<p><a href="{{ url_for('monitors.list_monitors') }}">Back to monitors</a></p>
+{% endblock %}

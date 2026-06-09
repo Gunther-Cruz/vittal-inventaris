@@ -14,11 +14,12 @@ class ITAssetMixin:
     serial_number = db.Column("numero_serie", db.String(120), nullable=True, unique=True, index=True)
     manufacturer = db.Column("fabricante", db.String(120), nullable=False)
     model = db.Column("modelo", db.String(120), nullable=False)
-    batch = db.Column("lote", db.String(120), nullable=True)
     purchase_date = db.Column("data_compra", db.Date, nullable=True)
     operational_status = db.Column(
         "situacao_operacional",
-        db.Enum(OperationalStatus, name="situacao_operacional_gabinete", native_enum=False, length=40),
+        db.Enum(OperationalStatus, name="situacao_operacional_ativo", native_enum=False, length=40),
         nullable=False,
     )
     notes = db.Column("observacao", db.Text, nullable=True)
+
+

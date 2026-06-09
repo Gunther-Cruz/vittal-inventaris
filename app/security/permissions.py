@@ -63,6 +63,16 @@ def can_manage_computer_cases(usuario) -> bool:
     return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO)
 
 
+def can_view_monitors(usuario) -> bool:
+    """Technicians and coordinators can inspect monitor inventory."""
+    return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO, PerfilUsuario.COORDENADOR)
+
+
+def can_manage_monitors(usuario) -> bool:
+    """Only technicians can register or update monitor inventory data."""
+    return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO)
+
+
 def perfis_criaveis_por(usuario) -> tuple[PerfilUsuario, ...]:
     if not pode_criar_usuarios(usuario):
         return ()

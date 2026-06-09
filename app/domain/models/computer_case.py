@@ -8,6 +8,7 @@ class ComputerCase(ITAssetMixin, db.Model):
     __tablename__ = "gabinete"
 
     id = db.Column("id_gabinete", db.Integer, primary_key=True)
+    batch = db.Column("lote", db.String(120), nullable=True)
     processor_model = db.Column("processador_modelo", db.String(160), nullable=True)
     processor_frequency_ghz = db.Column("processador_frequencia_ghz", db.Numeric(6, 2), nullable=True)
     motherboard_model = db.Column("placa_mae_modelo", db.String(160), nullable=True)

@@ -36,8 +36,13 @@ Os enums ja consolidados no projeto incluem, no minimo:
 - `StatusOS`
 - `TipoManutencao`
 - `SituacaoOperacional`
+- `DisplayConnection`
 
 Esses estados e categorias devem guiar tanto a modelagem do dominio quanto a futura persistencia.
+
+`DisplayConnection` padroniza o tipo de conexao de video do monitor, como
+`HDMI`, `VGA`, `DISPLAYPORT`, `DVI`, `USB_C` e `OUTRA`. O objetivo e evitar
+variacoes textuais no cadastro e permitir filtros e relatorios futuros.
 
 ## Classes de dominio principais
 
