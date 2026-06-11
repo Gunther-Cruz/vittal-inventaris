@@ -21,6 +21,8 @@ class ComputerCase(ITAssetMixin, db.Model):
     power_supply_description = db.Column("fonte_descricao", db.String(255), nullable=True)
     operating_system = db.Column("sistema_operacional", db.String(160), nullable=True)
 
+    allocations = db.relationship("ComputerCaseAllocation", back_populates="computer_case")
+
     def __repr__(self) -> str:
         return (
             f"<ComputerCase id={self.id!r} asset_tag={self.asset_tag!r} "

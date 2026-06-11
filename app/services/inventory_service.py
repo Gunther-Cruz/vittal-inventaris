@@ -1,11 +1,22 @@
 from collections.abc import Mapping
-from datetime import date
+from datetime import date, datetime, timezone
 from decimal import Decimal, InvalidOperation
 
 from app.domain.enums import DisplayConnection, OperationalStatus
-from app.domain.models import ComputerCase, Laboratory, Monitor, Workstation
+from app.domain.models import (
+    ComputerCase,
+    ComputerCaseAllocation,
+    Laboratory,
+    Monitor,
+    MonitorAllocation,
+    Usuario,
+    Workstation,
+)
+from app.extensions import db
+from app.repositories.computer_case_allocation_repository import ComputerCaseAllocationRepository
 from app.repositories.computer_case_repository import ComputerCaseRepository
 from app.repositories.laboratory_repository import LaboratoryRepository
+from app.repositories.monitor_allocation_repository import MonitorAllocationRepository
 from app.repositories.monitor_repository import MonitorRepository
 from app.repositories.workstation_repository import WorkstationRepository
 
@@ -13,17 +24,27 @@ from app.repositories.workstation_repository import WorkstationRepository
 class InventoryService:
     """Use cases for physical structure, inventory, movements, and asset lifecycle."""
 
+    ASSIGNED_STATUS_CHANGE_MESSAGE = (
+        "Assigned assets must have their status changed through unassignment or service order."
+    )
+
     def __init__(
         self,
         laboratory_repository: LaboratoryRepository | None = None,
         workstation_repository: WorkstationRepository | None = None,
         computer_case_repository: ComputerCaseRepository | None = None,
         monitor_repository: MonitorRepository | None = None,
+        computer_case_allocation_repository: ComputerCaseAllocationRepository | None = None,
+        monitor_allocation_repository: MonitorAllocationRepository | None = None,
     ) -> None:
         self.laboratory_repository = laboratory_repository or LaboratoryRepository()
         self.workstation_repository = workstation_repository or WorkstationRepository()
         self.computer_case_repository = computer_case_repository or ComputerCaseRepository()
         self.monitor_repository = monitor_repository or MonitorRepository()
+        self.computer_case_allocation_repository = (
+            computer_case_allocation_repository or ComputerCaseAllocationRepository()
+        )
+        self.monitor_allocation_repository = monitor_allocation_repository or MonitorAllocationRepository()
 
     # -------------------------------------------------------------------------
     # Laboratories
@@ -142,6 +163,7 @@ class InventoryService:
 
     def create_computer_case(self, data: Mapping[str, object]) -> ComputerCase:
         computer_case = self._build_computer_case(data)
+        self._ensure_unassigned_asset_status(computer_case.operational_status)
         self._ensure_unique_computer_case_identifiers(computer_case)
         return self.computer_case_repository.save(computer_case)
 
@@ -150,6 +172,10 @@ class InventoryService:
         computer_case: ComputerCase,
         data: Mapping[str, object],
     ) -> ComputerCase:
+        requested_status = self._normalize_operational_status(
+            data.get("operational_status", computer_case.operational_status.value),
+        )
+        self._ensure_computer_case_status_change_is_allowed(computer_case, requested_status)
         self._apply_computer_case_data(computer_case, data)
         self._ensure_unique_computer_case_identifiers(computer_case)
         return self.computer_case_repository.commit(computer_case)
@@ -159,11 +185,27 @@ class InventoryService:
         computer_case: ComputerCase,
         operational_status: object,
     ) -> ComputerCase:
-        computer_case.operational_status = self._normalize_operational_status(operational_status)
+        if self._computer_case_has_active_allocation(computer_case):
+            raise ValueError(self.ASSIGNED_STATUS_CHANGE_MESSAGE)
+
+        new_status = self._normalize_operational_status(operational_status)
+        self._ensure_unassigned_asset_status(new_status)
+        computer_case.operational_status = new_status
         return self.computer_case_repository.commit(computer_case)
 
     def list_computer_cases(self) -> list[ComputerCase]:
         return self.computer_case_repository.list_all()
+
+    def list_available_computer_cases(self) -> list[ComputerCase]:
+        return [
+            computer_case
+            for computer_case in self.computer_case_repository.list_all()
+            if computer_case.operational_status == OperationalStatus.FUNCIONAL_DESALOCADO
+            and self.computer_case_allocation_repository.find_active_by_computer_case(computer_case.id) is None
+        ]
+
+    def list_assigned_computer_case_ids(self) -> set[int]:
+        return self.computer_case_allocation_repository.list_active_computer_case_ids()
 
     def get_computer_case(self, computer_case_id: int) -> ComputerCase:
         computer_case = self.computer_case_repository.find_by_id(computer_case_id)
@@ -223,7 +265,7 @@ class InventoryService:
         )
         computer_case.operating_system = self._normalize_optional_text(data.get("operating_system", ""))
         computer_case.operational_status = self._normalize_operational_status(
-            data.get("operational_status", OperationalStatus.EM_FUNCIONAMENTO.value),
+            data.get("operational_status", OperationalStatus.FUNCIONAL_DESALOCADO.value),
         )
         computer_case.notes = self._normalize_optional_text(data.get("notes", ""))
 
@@ -242,20 +284,41 @@ class InventoryService:
 
     def create_monitor(self, data: Mapping[str, object]) -> Monitor:
         monitor = self._build_monitor(data)
+        self._ensure_unassigned_asset_status(monitor.operational_status)
         self._ensure_unique_monitor_identifiers(monitor)
         return self.monitor_repository.save(monitor)
 
     def update_monitor(self, monitor: Monitor, data: Mapping[str, object]) -> Monitor:
+        requested_status = self._normalize_operational_status(
+            data.get("operational_status", monitor.operational_status.value),
+        )
+        self._ensure_monitor_status_change_is_allowed(monitor, requested_status)
         self._apply_monitor_data(monitor, data)
         self._ensure_unique_monitor_identifiers(monitor)
         return self.monitor_repository.commit(monitor)
 
     def set_monitor_status(self, monitor: Monitor, operational_status: object) -> Monitor:
-        monitor.operational_status = self._normalize_operational_status(operational_status)
+        if self._monitor_has_active_allocation(monitor):
+            raise ValueError(self.ASSIGNED_STATUS_CHANGE_MESSAGE)
+
+        new_status = self._normalize_operational_status(operational_status)
+        self._ensure_unassigned_asset_status(new_status)
+        monitor.operational_status = new_status
         return self.monitor_repository.commit(monitor)
 
     def list_monitors(self) -> list[Monitor]:
         return self.monitor_repository.list_all()
+
+    def list_available_monitors(self) -> list[Monitor]:
+        return [
+            monitor
+            for monitor in self.monitor_repository.list_all()
+            if monitor.operational_status == OperationalStatus.FUNCIONAL_DESALOCADO
+            and self.monitor_allocation_repository.find_active_by_monitor(monitor.id) is None
+        ]
+
+    def list_assigned_monitor_ids(self) -> set[int]:
+        return self.monitor_allocation_repository.list_active_monitor_ids()
 
     def get_monitor(self, monitor_id: int) -> Monitor:
         monitor = self.monitor_repository.find_by_id(monitor_id)
@@ -290,7 +353,7 @@ class InventoryService:
         )
         monitor.display_connection = self._normalize_display_connection(data.get("display_connection", ""))
         monitor.operational_status = self._normalize_operational_status(
-            data.get("operational_status", OperationalStatus.EM_FUNCIONAMENTO.value),
+            data.get("operational_status", OperationalStatus.FUNCIONAL_DESALOCADO.value),
         )
         monitor.notes = self._normalize_optional_text(data.get("notes", ""))
 
@@ -307,7 +370,124 @@ class InventoryService:
     # Current bindings and movements
     # -------------------------------------------------------------------------
 
-    # Movement use cases will preserve historical allocation records.
+    def assign_computer_case_to_workstation(
+        self,
+        computer_case: ComputerCase,
+        workstation: Workstation,
+        technician: Usuario,
+        data: Mapping[str, object],
+    ) -> ComputerCaseAllocation:
+        self._ensure_can_assign_asset_to_workstation(workstation, computer_case, "computer case")
+        if workstation.current_computer_case_id is not None:
+            raise ValueError("Workstation already has a computer case.")
+        if self.computer_case_allocation_repository.find_active_by_computer_case(computer_case.id):
+            raise ValueError("Computer case already has an active allocation.")
+
+        allocation = ComputerCaseAllocation(
+            computer_case_id=computer_case.id,
+            workstation_id=workstation.id,
+            technician_id=technician.id,
+            movement_reason=self._normalize_required_text(
+                data.get("movement_reason", ""),
+                "Movement reason is required.",
+            ),
+            notes=self._normalize_optional_text(data.get("notes", "")),
+        )
+        workstation.current_computer_case = computer_case
+        computer_case.operational_status = OperationalStatus.EM_FUNCIONAMENTO
+        db.session.add(allocation)
+        return self.computer_case_allocation_repository.commit(allocation)
+
+    def unassign_computer_case_from_workstation(
+        self,
+        workstation: Workstation,
+        technician: Usuario,
+        data: Mapping[str, object],
+    ) -> ComputerCaseAllocation:
+        if workstation.current_computer_case_id is None or workstation.current_computer_case is None:
+            raise ValueError("Workstation has no computer case.")
+
+        allocation = self.computer_case_allocation_repository.find_active_by_workstation(workstation.id)
+        if allocation is None or allocation.computer_case_id != workstation.current_computer_case_id:
+            raise ValueError("Active computer case allocation not found.")
+
+        new_status = self._normalize_unassignment_status(data.get("operational_status", ""))
+        allocation.end_at = datetime.now(timezone.utc)
+        allocation.movement_reason = self._normalize_required_text(
+            data.get("movement_reason", ""),
+            "Movement reason is required.",
+        )
+        allocation.notes = self._normalize_optional_text(data.get("notes", ""))
+        workstation.current_computer_case.operational_status = new_status
+        workstation.current_computer_case = None
+        return self.computer_case_allocation_repository.commit(allocation)
+
+    def assign_monitor_to_workstation(
+        self,
+        monitor: Monitor,
+        workstation: Workstation,
+        technician: Usuario,
+        data: Mapping[str, object],
+    ) -> MonitorAllocation:
+        self._ensure_can_assign_asset_to_workstation(workstation, monitor, "monitor")
+        if workstation.current_monitor_id is not None:
+            raise ValueError("Workstation already has a monitor.")
+        if self.monitor_allocation_repository.find_active_by_monitor(monitor.id):
+            raise ValueError("Monitor already has an active allocation.")
+
+        allocation = MonitorAllocation(
+            monitor_id=monitor.id,
+            workstation_id=workstation.id,
+            technician_id=technician.id,
+            movement_reason=self._normalize_required_text(
+                data.get("movement_reason", ""),
+                "Movement reason is required.",
+            ),
+            notes=self._normalize_optional_text(data.get("notes", "")),
+        )
+        workstation.current_monitor = monitor
+        monitor.operational_status = OperationalStatus.EM_FUNCIONAMENTO
+        db.session.add(allocation)
+        return self.monitor_allocation_repository.commit(allocation)
+
+    def unassign_monitor_from_workstation(
+        self,
+        workstation: Workstation,
+        technician: Usuario,
+        data: Mapping[str, object],
+    ) -> MonitorAllocation:
+        if workstation.current_monitor_id is None or workstation.current_monitor is None:
+            raise ValueError("Workstation has no monitor.")
+
+        allocation = self.monitor_allocation_repository.find_active_by_workstation(workstation.id)
+        if allocation is None or allocation.monitor_id != workstation.current_monitor_id:
+            raise ValueError("Active monitor allocation not found.")
+
+        new_status = self._normalize_unassignment_status(data.get("operational_status", ""))
+        allocation.end_at = datetime.now(timezone.utc)
+        allocation.movement_reason = self._normalize_required_text(
+            data.get("movement_reason", ""),
+            "Movement reason is required.",
+        )
+        allocation.notes = self._normalize_optional_text(data.get("notes", ""))
+        workstation.current_monitor.operational_status = new_status
+        workstation.current_monitor = None
+        return self.monitor_allocation_repository.commit(allocation)
+
+    def list_computer_case_allocations(self, computer_case: ComputerCase) -> list[ComputerCaseAllocation]:
+        return self.computer_case_allocation_repository.list_by_computer_case(computer_case.id)
+
+    def list_monitor_allocations(self, monitor: Monitor) -> list[MonitorAllocation]:
+        return self.monitor_allocation_repository.list_by_monitor(monitor.id)
+
+    def list_workstation_computer_case_allocations(
+        self,
+        workstation: Workstation,
+    ) -> list[ComputerCaseAllocation]:
+        return self.computer_case_allocation_repository.list_by_workstation(workstation.id)
+
+    def list_workstation_monitor_allocations(self, workstation: Workstation) -> list[MonitorAllocation]:
+        return self.monitor_allocation_repository.list_by_workstation(workstation.id)
 
     # -------------------------------------------------------------------------
     # Upgrades and disposal
@@ -377,6 +557,80 @@ class InventoryService:
             return OperationalStatus(normalized)
         except ValueError as exc:
             raise ValueError("Invalid operational status.") from exc
+
+    @staticmethod
+    def _normalize_unassignment_status(value: object) -> OperationalStatus:
+        status = InventoryService._normalize_operational_status(value)
+        if status not in (
+            OperationalStatus.FUNCIONAL_DESALOCADO,
+            OperationalStatus.EM_MANUTENCAO,
+            OperationalStatus.DESATIVADO,
+        ):
+            raise ValueError("Invalid unassignment status.")
+
+        return status
+
+    @staticmethod
+    def _ensure_unassigned_asset_status(status: OperationalStatus) -> None:
+        if status == OperationalStatus.EM_FUNCIONAMENTO:
+            raise ValueError("Unassigned assets cannot be in operation.")
+
+    def _ensure_computer_case_status_is_consistent(self, computer_case: ComputerCase) -> None:
+        active_allocation = self.computer_case_allocation_repository.find_active_by_computer_case(computer_case.id)
+        if computer_case.operational_status == OperationalStatus.EM_FUNCIONAMENTO and active_allocation is None:
+            raise ValueError("Computer case in operation must be assigned to a workstation.")
+
+    def _ensure_monitor_status_is_consistent(self, monitor: Monitor) -> None:
+        active_allocation = self.monitor_allocation_repository.find_active_by_monitor(monitor.id)
+        if monitor.operational_status == OperationalStatus.EM_FUNCIONAMENTO and active_allocation is None:
+            raise ValueError("Monitor in operation must be assigned to a workstation.")
+
+    def _ensure_computer_case_status_change_is_allowed(
+        self,
+        computer_case: ComputerCase,
+        requested_status: OperationalStatus,
+    ) -> None:
+        has_active_allocation = self._computer_case_has_active_allocation(computer_case)
+        if has_active_allocation and requested_status != computer_case.operational_status:
+            raise ValueError(self.ASSIGNED_STATUS_CHANGE_MESSAGE)
+
+        if not has_active_allocation:
+            self._ensure_unassigned_asset_status(requested_status)
+
+    def _ensure_monitor_status_change_is_allowed(
+        self,
+        monitor: Monitor,
+        requested_status: OperationalStatus,
+    ) -> None:
+        has_active_allocation = self._monitor_has_active_allocation(monitor)
+        if has_active_allocation and requested_status != monitor.operational_status:
+            raise ValueError(self.ASSIGNED_STATUS_CHANGE_MESSAGE)
+
+        if not has_active_allocation:
+            self._ensure_unassigned_asset_status(requested_status)
+
+    def _computer_case_has_active_allocation(self, computer_case: ComputerCase) -> bool:
+        if computer_case.id is None:
+            return False
+
+        return self.computer_case_allocation_repository.find_active_by_computer_case(computer_case.id) is not None
+
+    def _monitor_has_active_allocation(self, monitor: Monitor) -> bool:
+        if monitor.id is None:
+            return False
+
+        return self.monitor_allocation_repository.find_active_by_monitor(monitor.id) is not None
+
+    def _ensure_can_assign_asset_to_workstation(
+        self,
+        workstation: Workstation,
+        asset: ComputerCase | Monitor,
+        asset_label: str,
+    ) -> None:
+        if not workstation.active:
+            raise ValueError("Inactive workstations cannot receive assets.")
+        if asset.operational_status != OperationalStatus.FUNCIONAL_DESALOCADO:
+            raise ValueError(f"Only unassigned functional {asset_label}s can be assigned.")
 
     @staticmethod
     def _normalize_display_connection(value: object) -> DisplayConnection | None:

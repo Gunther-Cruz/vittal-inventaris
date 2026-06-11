@@ -73,6 +73,16 @@ def can_manage_monitors(usuario) -> bool:
     return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO)
 
 
+def can_view_asset_allocations(usuario) -> bool:
+    """Technicians and coordinators can inspect workstation asset bindings."""
+    return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO, PerfilUsuario.COORDENADOR)
+
+
+def can_manage_asset_allocations(usuario) -> bool:
+    """Only technicians can bind or unbind assets from workstations."""
+    return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO)
+
+
 def perfis_criaveis_por(usuario) -> tuple[PerfilUsuario, ...]:
     if not pode_criar_usuarios(usuario):
         return ()

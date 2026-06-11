@@ -38,9 +38,42 @@
   <dd>{{ computer_case.operating_system or "Not defined" }}</dd>
   <dt>Operational status</dt>
   <dd>{{ computer_case.operational_status.value }}</dd>
+  <dt>Current location</dt>
+  <dd>
+    {% set active_allocation = allocation_history | selectattr("end_at", "none") | list | first %}
+    {% if active_allocation %}
+      {{ active_allocation.workstation.laboratory.code }} / {{ active_allocation.workstation.code }}
+    {% else %}
+      No workstation assigned
+    {% endif %}
+  </dd>
   <dt>Notes</dt>
   <dd>{{ computer_case.notes or "Not defined" }}</dd>
 </dl>
+
+<h2>Allocation history</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Workstation</th>
+      <th>Technician</th>
+      <th>Start</th>
+      <th>End</th>
+      <th>Reason</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for allocation in allocation_history %}
+      <tr>
+        <td>{{ allocation.workstation.laboratory.code }} / {{ allocation.workstation.code }}</td>
+        <td>{{ allocation.technician.nome }}</td>
+        <td>{{ allocation.start_at }}</td>
+        <td>{{ allocation.end_at or "Active" }}</td>
+        <td>{{ allocation.movement_reason or "Not defined" }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
 
 {% if current_user.perfil.value == "TECNICO" %}
   <p><a href="{{ url_for('computer_cases.edit_computer_case', computer_case_id=computer_case.id) }}">Edit computer case</a></p>

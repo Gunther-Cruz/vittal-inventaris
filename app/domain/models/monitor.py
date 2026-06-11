@@ -16,6 +16,8 @@ class Monitor(ITAssetMixin, db.Model):
         nullable=True,
     )
 
+    allocations = db.relationship("MonitorAllocation", back_populates="monitor")
+
     def __repr__(self) -> str:
         return (
             f"<Monitor id={self.id!r} asset_tag={self.asset_tag!r} "

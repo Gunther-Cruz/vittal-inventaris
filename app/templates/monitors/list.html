@@ -34,15 +34,21 @@
           <a href="{{ url_for('monitors.show_monitor', monitor_id=monitor.id) }}">Details</a>
           {% if current_user.perfil.value == "TECNICO" %}
             <a href="{{ url_for('monitors.edit_monitor', monitor_id=monitor.id) }}">Edit</a>
-            <form method="post" action="{{ url_for('monitors.update_monitor_status', monitor_id=monitor.id) }}">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <select name="operational_status">
-                {% for status in statuses %}
-                  <option value="{{ status.value }}" {% if monitor.operational_status == status %}selected{% endif %}>{{ status.value }}</option>
-                {% endfor %}
-              </select>
-              <button type="submit">Update status</button>
-            </form>
+            {% if monitor.id in assigned_monitor_ids %}
+              <p>Status for assigned assets changes through unassignment or future service orders.</p>
+            {% else %}
+              <form method="post" action="{{ url_for('monitors.update_monitor_status', monitor_id=monitor.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <select name="operational_status">
+                  {% for status in statuses %}
+                    {% if status.value != "EM_FUNCIONAMENTO" %}
+                      <option value="{{ status.value }}" {% if monitor.operational_status == status %}selected{% endif %}>{{ status.value }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+                <button type="submit">Update status</button>
+              </form>
+            {% endif %}
           {% endif %}
         </td>
       </tr>

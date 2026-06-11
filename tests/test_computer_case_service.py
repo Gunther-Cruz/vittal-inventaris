@@ -28,7 +28,7 @@ class ComputerCaseServiceTestCase(unittest.TestCase):
         self.assertEqual("SN-001", computer_case.serial_number)
         self.assertEqual(Decimal("3.70"), computer_case.processor_frequency_ghz)
         self.assertEqual(Decimal("8.00"), computer_case.installed_memory_gb)
-        self.assertEqual(OperationalStatus.EM_FUNCIONAMENTO, computer_case.operational_status)
+        self.assertEqual(OperationalStatus.FUNCIONAL_DESALOCADO, computer_case.operational_status)
 
     def test_create_rejects_duplicate_asset_tag(self):
         self.inventory_service.create_computer_case(self._computer_case_data(asset_tag="PAT-001"))
@@ -113,7 +113,7 @@ class ComputerCaseServiceTestCase(unittest.TestCase):
             "storage_description": "SSD 240GB SATA",
             "power_supply_description": "Fonte Dell 240W",
             "operating_system": "Ubuntu MATE 22.04",
-            "operational_status": "EM_FUNCIONAMENTO",
+            "operational_status": "FUNCIONAL_DESALOCADO",
             "notes": "Initial technical collection",
         }
         data.update(overrides)

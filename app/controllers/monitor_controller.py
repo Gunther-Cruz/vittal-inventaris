@@ -16,6 +16,7 @@ def list_monitors():
     return render_template(
         "monitors/list.html",
         monitors=inventory_service.list_monitors(),
+        assigned_monitor_ids=inventory_service.list_assigned_monitor_ids(),
         statuses=OperationalStatus,
     )
 
@@ -60,7 +61,11 @@ def show_monitor(monitor_id: int):
     """Shows the complete technical record of a monitor."""
     inventory_service = InventoryService()
     monitor = _get_monitor_or_404(inventory_service, monitor_id)
-    return render_template("monitors/detail.html", monitor=monitor)
+    return render_template(
+        "monitors/detail.html",
+        monitor=monitor,
+        allocation_history=inventory_service.list_monitor_allocations(monitor),
+    )
 
 
 @monitors_bp.get("/<int:monitor_id>/edit")
@@ -72,6 +77,7 @@ def edit_monitor(monitor_id: int):
     return render_template(
         "monitors/edit.html",
         monitor=monitor,
+        asset_assigned=monitor.id in inventory_service.list_assigned_monitor_ids(),
         statuses=OperationalStatus,
         display_connections=DisplayConnection,
     )
@@ -91,6 +97,7 @@ def update_monitor(monitor_id: int):
             render_template(
                 "monitors/edit.html",
                 monitor=monitor,
+                asset_assigned=monitor.id in inventory_service.list_assigned_monitor_ids(),
                 statuses=OperationalStatus,
                 display_connections=DisplayConnection,
                 form_data=request.form,

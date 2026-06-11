@@ -190,7 +190,7 @@ class MonitorFlowTestCase(unittest.TestCase):
             "purchase_date": "2022-03-15",
             "screen_size_inches": "21.50",
             "display_connection": "HDMI",
-            "operational_status": "EM_FUNCIONAMENTO",
+            "operational_status": "FUNCIONAL_DESALOCADO",
             "notes": "Initial monitor collection",
         }
         data.update(overrides)

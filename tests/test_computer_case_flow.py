@@ -202,7 +202,7 @@ class ComputerCaseFlowTestCase(unittest.TestCase):
             "storage_description": "SSD 240GB SATA",
             "power_supply_description": "Fonte Dell 240W",
             "operating_system": "Ubuntu MATE 22.04",
-            "operational_status": "EM_FUNCIONAMENTO",
+            "operational_status": "FUNCIONAL_DESALOCADO",
             "notes": "Initial technical collection",
         }
         data.update(overrides)

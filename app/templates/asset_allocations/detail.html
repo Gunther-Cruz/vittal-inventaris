@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Workstation assets - {{ workstation.code }}{% endblock %}
+
+{% block content %}
+<h1>Workstation assets - {{ workstation.code }}</h1>
+
+<p>Laboratory: {{ workstation.laboratory.code }} - {{ workstation.laboratory.name }}</p>
+
+<section>
+  <h2>Current computer case</h2>
+  {% if workstation.current_computer_case %}
+    <p>
+      {{ workstation.current_computer_case.asset_tag }} -
+      {{ workstation.current_computer_case.manufacturer }}
+      {{ workstation.current_computer_case.model }} -
+      {{ workstation.current_computer_case.operational_status.value }}
+    </p>
+    <p><a href="{{ url_for('computer_cases.show_computer_case', computer_case_id=workstation.current_computer_case.id) }}">Computer case details</a></p>
+    {% if current_user.perfil.value == "TECNICO" %}
+      <form method="post" action="{{ url_for('asset_allocations.unassign_computer_case', workstation_id=workstation.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="computer_case_status">New status</label>
+        <select id="computer_case_status" name="operational_status" required>
+          {% for status in unassignment_statuses %}
+            <option value="{{ status.value }}">{{ status.value }}</option>
+          {% endfor %}
+        </select>
+
+        <label for="computer_case_unassign_reason">Movement reason</label>
+        <input id="computer_case_unassign_reason" name="movement_reason" type="text" required>
+
+        <label for="computer_case_unassign_notes">Notes</label>
+        <textarea id="computer_case_unassign_notes" name="notes"></textarea>
+
+        <button type="submit">Unassign computer case</button>
+      </form>
+    {% endif %}
+  {% else %}
+    <p>No computer case assigned.</p>
+    {% if current_user.perfil.value == "TECNICO" %}
+      {% if available_computer_cases %}
+        <form method="post" action="{{ url_for('asset_allocations.assign_computer_case', workstation_id=workstation.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <label for="computer_case_id">Computer case</label>
+          <select id="computer_case_id" name="computer_case_id" required>
+            {% for computer_case in available_computer_cases %}
+              <option value="{{ computer_case.id }}">{{ computer_case.asset_tag }} - {{ computer_case.manufacturer }} {{ computer_case.model }}</option>
+            {% endfor %}
+          </select>
+
+          <label for="computer_case_assign_reason">Movement reason</label>
+          <input id="computer_case_assign_reason" name="movement_reason" type="text" required>
+
+          <label for="computer_case_assign_notes">Notes</label>
+          <textarea id="computer_case_assign_notes" name="notes"></textarea>
+
+          <button type="submit">Assign computer case</button>
+        </form>
+      {% else %}
+        <p>No unassigned functional computer cases available.</p>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+</section>
+
+<section>
+  <h2>Current monitor</h2>
+  {% if workstation.current_monitor %}
+    <p>
+      {{ workstation.current_monitor.asset_tag }} -
+      {{ workstation.current_monitor.manufacturer }}
+      {{ workstation.current_monitor.model }} -
+      {{ workstation.current_monitor.operational_status.value }}
+    </p>
+    <p><a href="{{ url_for('monitors.show_monitor', monitor_id=workstation.current_monitor.id) }}">Monitor details</a></p>
+    {% if current_user.perfil.value == "TECNICO" %}
+      <form method="post" action="{{ url_for('asset_allocations.unassign_monitor', workstation_id=workstation.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <label for="monitor_status">New status</label>
+        <select id="monitor_status" name="operational_status" required>
+          {% for status in unassignment_statuses %}
+            <option value="{{ status.value }}">{{ status.value }}</option>
+          {% endfor %}
+        </select>
+
+        <label for="monitor_unassign_reason">Movement reason</label>
+        <input id="monitor_unassign_reason" name="movement_reason" type="text" required>
+
+        <label for="monitor_unassign_notes">Notes</label>
+        <textarea id="monitor_unassign_notes" name="notes"></textarea>
+
+        <button type="submit">Unassign monitor</button>
+      </form>
+    {% endif %}
+  {% else %}
+    <p>No monitor assigned.</p>
+    {% if current_user.perfil.value == "TECNICO" %}
+      {% if available_monitors %}
+        <form method="post" action="{{ url_for('asset_allocations.assign_monitor', workstation_id=workstation.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <label for="monitor_id">Monitor</label>
+          <select id="monitor_id" name="monitor_id" required>
+            {% for monitor in available_monitors %}
+              <option value="{{ monitor.id }}">{{ monitor.asset_tag }} - {{ monitor.manufacturer }} {{ monitor.model }}</option>
+            {% endfor %}
+          </select>
+
+          <label for="monitor_assign_reason">Movement reason</label>
+          <input id="monitor_assign_reason" name="movement_reason" type="text" required>
+
+          <label for="monitor_assign_notes">Notes</label>
+          <textarea id="monitor_assign_notes" name="notes"></textarea>
+
+          <button type="submit">Assign monitor</button>
+        </form>
+      {% else %}
+        <p>No unassigned functional monitors available.</p>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+</section>
+
+<section>
+  <h2>Computer case history</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Asset</th>
+        <th>Technician</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Reason</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for allocation in computer_case_history %}
+        <tr>
+          <td>{{ allocation.computer_case.asset_tag }}</td>
+          <td>{{ allocation.technician.nome }}</td>
+          <td>{{ allocation.start_at }}</td>
+          <td>{{ allocation.end_at or "Active" }}</td>
+          <td>{{ allocation.movement_reason or "Not defined" }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Monitor history</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Asset</th>
+        <th>Technician</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Reason</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for allocation in monitor_history %}
+        <tr>
+          <td>{{ allocation.monitor.asset_tag }}</td>
+          <td>{{ allocation.technician.nome }}</td>
+          <td>{{ allocation.start_at }}</td>
+          <td>{{ allocation.end_at or "Active" }}</td>
+          <td>{{ allocation.movement_reason or "Not defined" }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<p><a href="{{ url_for('workstations.list_workstations', laboratory_id=workstation.laboratory_id) }}">Back to workstations</a></p>
+{% endblock %}

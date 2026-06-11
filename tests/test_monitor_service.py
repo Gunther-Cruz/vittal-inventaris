@@ -28,7 +28,7 @@ class MonitorServiceTestCase(unittest.TestCase):
         self.assertEqual("MSN-001", monitor.serial_number)
         self.assertEqual(Decimal("21.50"), monitor.screen_size_inches)
         self.assertEqual(DisplayConnection.HDMI, monitor.display_connection)
-        self.assertEqual(OperationalStatus.EM_FUNCIONAMENTO, monitor.operational_status)
+        self.assertEqual(OperationalStatus.FUNCIONAL_DESALOCADO, monitor.operational_status)
 
     def test_create_rejects_duplicate_asset_tag(self):
         self.inventory_service.create_monitor(self._monitor_data(asset_tag="MON-001"))
@@ -101,7 +101,7 @@ class MonitorServiceTestCase(unittest.TestCase):
             "purchase_date": "2022-03-15",
             "screen_size_inches": "21.50",
             "display_connection": "HDMI",
-            "operational_status": "EM_FUNCIONAMENTO",
+            "operational_status": "FUNCIONAL_DESALOCADO",
             "notes": "Initial monitor collection",
         }
         data.update(overrides)

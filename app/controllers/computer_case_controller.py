@@ -16,6 +16,7 @@ def list_computer_cases():
     return render_template(
         "computer_cases/list.html",
         computer_cases=inventory_service.list_computer_cases(),
+        assigned_computer_case_ids=inventory_service.list_assigned_computer_case_ids(),
         statuses=OperationalStatus,
     )
 
@@ -58,7 +59,11 @@ def show_computer_case(computer_case_id: int):
     """Shows the complete technical record of a computer case."""
     inventory_service = InventoryService()
     computer_case = _get_computer_case_or_404(inventory_service, computer_case_id)
-    return render_template("computer_cases/detail.html", computer_case=computer_case)
+    return render_template(
+        "computer_cases/detail.html",
+        computer_case=computer_case,
+        allocation_history=inventory_service.list_computer_case_allocations(computer_case),
+    )
 
 
 @computer_cases_bp.get("/<int:computer_case_id>/edit")
@@ -70,6 +75,7 @@ def edit_computer_case(computer_case_id: int):
     return render_template(
         "computer_cases/edit.html",
         computer_case=computer_case,
+        asset_assigned=computer_case.id in inventory_service.list_assigned_computer_case_ids(),
         statuses=OperationalStatus,
     )
 
@@ -88,6 +94,7 @@ def update_computer_case(computer_case_id: int):
             render_template(
                 "computer_cases/edit.html",
                 computer_case=computer_case,
+                asset_assigned=computer_case.id in inventory_service.list_assigned_computer_case_ids(),
                 statuses=OperationalStatus,
                 form_data=request.form,
             ),
