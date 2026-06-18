@@ -112,7 +112,16 @@ def alterar_status_usuario(usuario_id: int):
     """Ativa ou desativa usuario persistido sem remover seu historico."""
     usuario_service = UsuarioService()
     usuario = _buscar_usuario_ou_404(usuario_service, usuario_id)
-    usuario_service.alterar_status_usuario(usuario, request.form.get("ativo") == "true")
+    try:
+        usuario_service.alterar_status_usuario(
+            usuario,
+            request.form.get("ativo") == "true",
+            ator=current_user,
+        )
+    except ValueError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("usuarios.listar_usuarios"))
+
     flash("Status do usuario atualizado com sucesso.", "success")
     return redirect(url_for("usuarios.listar_usuarios"))
 

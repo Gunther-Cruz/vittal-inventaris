@@ -69,12 +69,18 @@ class UsuarioServiceTestCase(unittest.TestCase):
         usuario = self._criar_tecnico()
 
         self.usuario_service.alterar_perfil(usuario, "PROFESSOR")
-        self.usuario_service.alterar_status_usuario(usuario, False)
+        self.usuario_service.alterar_status_usuario(usuario, False, ator=self.coordenador)
         self.usuario_service.definir_permissao_dashboard(usuario, True)
 
         self.assertEqual(PerfilUsuario.PROFESSOR, usuario.perfil)
         self.assertFalse(usuario.ativo)
         self.assertTrue(usuario.pode_visualizar_dashboard)
+
+    def test_usuario_nao_pode_desativar_a_si_mesmo(self):
+        with self.assertRaisesRegex(ValueError, "You cannot deactivate your own user."):
+            self.usuario_service.alterar_status_usuario(self.coordenador, False, ator=self.coordenador)
+
+        self.assertTrue(self.coordenador.ativo)
 
     def test_listar_usuarios(self):
         self._criar_tecnico()

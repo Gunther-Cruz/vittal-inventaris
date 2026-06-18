@@ -51,20 +51,15 @@
 <label for="operating_system">Operating system</label>
 <input id="operating_system" name="operating_system" type="text" value="{{ data.get('operating_system', computer_case.operating_system if computer_case is defined and computer_case.operating_system else '') }}">
 
-<label for="operational_status">Operational status</label>
-{% set selected_status = data.get('operational_status', computer_case.operational_status.value if computer_case is defined and computer_case.operational_status else 'FUNCIONAL_DESALOCADO') %}
-{% if asset_assigned is defined and asset_assigned %}
-  <p>{{ computer_case.operational_status.value }}. Assigned assets must have their status changed through unassignment or service order.</p>
-  <input type="hidden" name="operational_status" value="{{ computer_case.operational_status.value }}">
-{% else %}
-  <select id="operational_status" name="operational_status" required>
-    {% for status in statuses %}
-      {% if status.value != "EM_FUNCIONAMENTO" %}
-        <option value="{{ status.value }}" {% if selected_status == status.value %}selected{% endif %}>{{ status.value }}</option>
-      {% endif %}
-    {% endfor %}
-  </select>
-{% endif %}
+<p>
+  Operational status:
+  {% if computer_case is defined and computer_case.operational_status %}
+    {{ computer_case.operational_status.value }}
+  {% else %}
+    FUNCIONAL_DESALOCADO
+  {% endif %}
+</p>
+<p>Asset status is controlled by assignment, unassignment, or future service orders.</p>
 
 <label for="notes">Notes</label>
 <textarea id="notes" name="notes">{{ data.get('notes', computer_case.notes if computer_case is defined and computer_case.notes else '') }}</textarea>

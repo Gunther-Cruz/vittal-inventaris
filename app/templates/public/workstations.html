@@ -6,12 +6,29 @@
 <h1>{{ laboratory.code }} - {{ laboratory.name }}</h1>
 <p>Selecione a estacao para continuar o registro do chamado.</p>
 
+<section aria-label="QA shortcuts">
+  <h2>QA shortcuts</h2>
+  <p>This public view must show only active workstations. Ticket creation will be added in a future block.</p>
+  <a href="{{ url_for('public.home') }}">Back to public laboratories</a>
+  <a href="{{ url_for('auth.login') }}">Login for internal view</a>
+</section>
+
 <section aria-label="Estacoes">
   {% if workstations %}
     <ul>
       {% for workstation in workstations %}
         <li>
           <strong>{{ workstation.code }}</strong>
+          {% if workstation.current_computer_case %}
+            <span>Computer case: {{ workstation.current_computer_case.asset_tag }}</span>
+          {% else %}
+            <span>No computer case</span>
+          {% endif %}
+          {% if workstation.current_monitor %}
+            <span>Monitor: {{ workstation.current_monitor.asset_tag }}</span>
+          {% else %}
+            <span>No monitor</span>
+          {% endif %}
           {% if workstation.map_position_x is not none and workstation.map_position_y is not none %}
             <span>Posicao: {{ workstation.map_position_x }}, {{ workstation.map_position_y }}</span>
           {% endif %}

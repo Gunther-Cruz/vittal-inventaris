@@ -27,6 +27,10 @@ class InventoryService:
     ASSIGNED_STATUS_CHANGE_MESSAGE = (
         "Assigned assets must have their status changed through unassignment or service order."
     )
+    MANUAL_STATUS_CHANGE_MESSAGE = (
+        "Asset status must be changed through assignment, unassignment, or service order."
+    )
+    WORKSTATION_MAP_COLUMNS = 4
 
     def __init__(
         self,
@@ -122,8 +126,6 @@ class InventoryService:
             raise ValueError("Workstation code already exists in this laboratory.")
 
         workstation.code = code
-        workstation.map_position_x = self._normalize_optional_int(data.get("map_position_x", ""))
-        workstation.map_position_y = self._normalize_optional_int(data.get("map_position_y", ""))
         workstation.notes = self._normalize_optional_text(data.get("notes", ""))
         return self.workstation_repository.commit(workstation)
 
@@ -148,22 +150,30 @@ class InventoryService:
         return workstation
 
     def _build_workstation(self, laboratory: Laboratory, data: Mapping[str, object]) -> Workstation:
+        map_position_x, map_position_y = self._calculate_next_workstation_position(laboratory)
         return Workstation(
             laboratory_id=laboratory.id,
             code=self._normalize_required_text(data.get("code", ""), "Code is required.").upper(),
-            map_position_x=self._normalize_optional_int(data.get("map_position_x", "")),
-            map_position_y=self._normalize_optional_int(data.get("map_position_y", "")),
+            map_position_x=map_position_x,
+            map_position_y=map_position_y,
             active=True,
             notes=self._normalize_optional_text(data.get("notes", "")),
         )
+
+    def _calculate_next_workstation_position(self, laboratory: Laboratory) -> tuple[int, int]:
+        workstations = self.workstation_repository.list_by_laboratory(laboratory.id)
+        next_index = len(workstations)
+        x = (next_index % self.WORKSTATION_MAP_COLUMNS) + 1
+        y = (next_index // self.WORKSTATION_MAP_COLUMNS) + 1
+        return x, y
 
     # -------------------------------------------------------------------------
     # Computer cases
     # -------------------------------------------------------------------------
 
     def create_computer_case(self, data: Mapping[str, object]) -> ComputerCase:
+        self._reject_manual_operational_status(data)
         computer_case = self._build_computer_case(data)
-        self._ensure_unassigned_asset_status(computer_case.operational_status)
         self._ensure_unique_computer_case_identifiers(computer_case)
         return self.computer_case_repository.save(computer_case)
 
@@ -172,10 +182,7 @@ class InventoryService:
         computer_case: ComputerCase,
         data: Mapping[str, object],
     ) -> ComputerCase:
-        requested_status = self._normalize_operational_status(
-            data.get("operational_status", computer_case.operational_status.value),
-        )
-        self._ensure_computer_case_status_change_is_allowed(computer_case, requested_status)
+        self._reject_manual_operational_status(data)
         self._apply_computer_case_data(computer_case, data)
         self._ensure_unique_computer_case_identifiers(computer_case)
         return self.computer_case_repository.commit(computer_case)
@@ -185,13 +192,7 @@ class InventoryService:
         computer_case: ComputerCase,
         operational_status: object,
     ) -> ComputerCase:
-        if self._computer_case_has_active_allocation(computer_case):
-            raise ValueError(self.ASSIGNED_STATUS_CHANGE_MESSAGE)
-
-        new_status = self._normalize_operational_status(operational_status)
-        self._ensure_unassigned_asset_status(new_status)
-        computer_case.operational_status = new_status
-        return self.computer_case_repository.commit(computer_case)
+        raise ValueError(self.MANUAL_STATUS_CHANGE_MESSAGE)
 
     def list_computer_cases(self) -> list[ComputerCase]:
         return self.computer_case_repository.list_all()
@@ -264,9 +265,8 @@ class InventoryService:
             data.get("power_supply_description", ""),
         )
         computer_case.operating_system = self._normalize_optional_text(data.get("operating_system", ""))
-        computer_case.operational_status = self._normalize_operational_status(
-            data.get("operational_status", OperationalStatus.FUNCIONAL_DESALOCADO.value),
-        )
+        if computer_case.operational_status is None:
+            computer_case.operational_status = OperationalStatus.FUNCIONAL_DESALOCADO
         computer_case.notes = self._normalize_optional_text(data.get("notes", ""))
 
     def _ensure_unique_computer_case_identifiers(self, computer_case: ComputerCase) -> None:
@@ -283,28 +283,19 @@ class InventoryService:
     # -------------------------------------------------------------------------
 
     def create_monitor(self, data: Mapping[str, object]) -> Monitor:
+        self._reject_manual_operational_status(data)
         monitor = self._build_monitor(data)
-        self._ensure_unassigned_asset_status(monitor.operational_status)
         self._ensure_unique_monitor_identifiers(monitor)
         return self.monitor_repository.save(monitor)
 
     def update_monitor(self, monitor: Monitor, data: Mapping[str, object]) -> Monitor:
-        requested_status = self._normalize_operational_status(
-            data.get("operational_status", monitor.operational_status.value),
-        )
-        self._ensure_monitor_status_change_is_allowed(monitor, requested_status)
+        self._reject_manual_operational_status(data)
         self._apply_monitor_data(monitor, data)
         self._ensure_unique_monitor_identifiers(monitor)
         return self.monitor_repository.commit(monitor)
 
     def set_monitor_status(self, monitor: Monitor, operational_status: object) -> Monitor:
-        if self._monitor_has_active_allocation(monitor):
-            raise ValueError(self.ASSIGNED_STATUS_CHANGE_MESSAGE)
-
-        new_status = self._normalize_operational_status(operational_status)
-        self._ensure_unassigned_asset_status(new_status)
-        monitor.operational_status = new_status
-        return self.monitor_repository.commit(monitor)
+        raise ValueError(self.MANUAL_STATUS_CHANGE_MESSAGE)
 
     def list_monitors(self) -> list[Monitor]:
         return self.monitor_repository.list_all()
@@ -352,9 +343,8 @@ class InventoryService:
             "Screen size must be a valid decimal number.",
         )
         monitor.display_connection = self._normalize_display_connection(data.get("display_connection", ""))
-        monitor.operational_status = self._normalize_operational_status(
-            data.get("operational_status", OperationalStatus.FUNCIONAL_DESALOCADO.value),
-        )
+        if monitor.operational_status is None:
+            monitor.operational_status = OperationalStatus.FUNCIONAL_DESALOCADO
         monitor.notes = self._normalize_optional_text(data.get("notes", ""))
 
     def _ensure_unique_monitor_identifiers(self, monitor: Monitor) -> None:
@@ -574,6 +564,10 @@ class InventoryService:
     def _ensure_unassigned_asset_status(status: OperationalStatus) -> None:
         if status == OperationalStatus.EM_FUNCIONAMENTO:
             raise ValueError("Unassigned assets cannot be in operation.")
+
+    def _reject_manual_operational_status(self, data: Mapping[str, object]) -> None:
+        if "operational_status" in data:
+            raise ValueError(self.MANUAL_STATUS_CHANGE_MESSAGE)
 
     def _ensure_computer_case_status_is_consistent(self, computer_case: ComputerCase) -> None:
         active_allocation = self.computer_case_allocation_repository.find_active_by_computer_case(computer_case.id)

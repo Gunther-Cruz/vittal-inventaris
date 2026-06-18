@@ -2,7 +2,6 @@ import re
 import unittest
 
 from app import create_app
-from app.domain.enums import OperationalStatus
 from app.extensions import db
 from app.services.inventory_service import InventoryService
 from app.services.usuario_service import UsuarioService
@@ -123,7 +122,7 @@ class ComputerCaseFlowTestCase(unittest.TestCase):
         self.assertIn(b"Computer case updated successfully.", response.data)
         self.assertIn(b"OptiPlex 7050", response.data)
 
-    def test_technician_changes_operational_status(self):
+    def test_technician_cannot_change_operational_status_directly(self):
         computer_case = self._create_computer_case()
         self._login("tecnico@ifrs.edu.br")
         csrf_token = self._csrf_token_from("/computer-cases")
@@ -135,8 +134,7 @@ class ComputerCaseFlowTestCase(unittest.TestCase):
         )
 
         self.assertEqual(200, response.status_code)
-        self.assertIn(b"DESATIVADO", response.data)
-        self.assertEqual(OperationalStatus.DESATIVADO, computer_case.operational_status)
+        self.assertIn(b"Asset status must be changed through assignment", response.data)
 
     def test_duplicate_asset_tag_returns_400(self):
         self._create_computer_case()
@@ -154,7 +152,7 @@ class ComputerCaseFlowTestCase(unittest.TestCase):
         self.assertEqual(400, response.status_code)
         self.assertIn(b"Asset tag already exists.", response.data)
 
-    def test_invalid_status_returns_400_on_create(self):
+    def test_manual_status_returns_400_on_create(self):
         self._login("tecnico@ifrs.edu.br")
         csrf_token = self._csrf_token_from("/computer-cases/new")
 
@@ -164,7 +162,7 @@ class ComputerCaseFlowTestCase(unittest.TestCase):
         )
 
         self.assertEqual(400, response.status_code)
-        self.assertIn(b"Invalid operational status.", response.data)
+        self.assertIn(b"Asset status must be changed through assignment", response.data)
 
     def test_mutation_requires_csrf(self):
         self._login("tecnico@ifrs.edu.br")
@@ -202,7 +200,6 @@ class ComputerCaseFlowTestCase(unittest.TestCase):
             "storage_description": "SSD 240GB SATA",
             "power_supply_description": "Fonte Dell 240W",
             "operating_system": "Ubuntu MATE 22.04",
-            "operational_status": "FUNCIONAL_DESALOCADO",
             "notes": "Initial technical collection",
         }
         data.update(overrides)

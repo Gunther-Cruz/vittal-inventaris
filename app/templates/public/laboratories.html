@@ -6,6 +6,12 @@
 <h1>VITTAL Inventaris</h1>
 <p>Selecione o laboratorio para localizar a estacao e registrar um chamado.</p>
 
+<section aria-label="QA shortcuts">
+  <h2>QA shortcuts</h2>
+  <p>This is the public entry point. Only active laboratories should appear here.</p>
+  <a href="{{ url_for('auth.login') }}">Login for internal QA</a>
+</section>
+
 <section aria-label="Laboratorios">
   {% if laboratories %}
     <ul>

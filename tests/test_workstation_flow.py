@@ -93,8 +93,6 @@ class WorkstationFlowTestCase(unittest.TestCase):
             f"/laboratories/{self.laboratory.id}/workstations/new",
             data={
                 "code": "E01",
-                "map_position_x": "10",
-                "map_position_y": "20",
                 "notes": "Created by test",
                 "csrf_token": csrf_token,
             },
@@ -113,8 +111,6 @@ class WorkstationFlowTestCase(unittest.TestCase):
             f"/laboratories/{self.laboratory.id}/workstations/new",
             data={
                 "code": "E03",
-                "map_position_x": "",
-                "map_position_y": "",
                 "csrf_token": csrf_token,
             },
             follow_redirects=True,
@@ -159,8 +155,6 @@ class WorkstationFlowTestCase(unittest.TestCase):
             f"/workstations/{workstation.id}/edit",
             data={
                 "code": "E02",
-                "map_position_x": "30",
-                "map_position_y": "40",
                 "notes": "Updated",
                 "csrf_token": csrf_token,
             },

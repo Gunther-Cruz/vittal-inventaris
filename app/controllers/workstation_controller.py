@@ -1,4 +1,5 @@
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask_login import current_user
 
 from app.security.decorators import permissao_requerida
 from app.security.permissions import can_manage_workstations, can_view_workstations
@@ -17,6 +18,7 @@ def list_workstations(laboratory_id: int):
         "workstations/list.html",
         laboratory=laboratory,
         workstations=inventory_service.list_workstations_by_laboratory(laboratory),
+        can_manage_workstations=can_manage_workstations(current_user),
     )
 
 

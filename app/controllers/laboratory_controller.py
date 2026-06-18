@@ -1,4 +1,5 @@
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask_login import current_user
 
 from app.security.decorators import permissao_requerida
 from app.security.permissions import can_manage_laboratories, can_view_laboratories
@@ -15,6 +16,7 @@ def list_laboratories():
     return render_template(
         "laboratories/list.html",
         laboratories=inventory_service.list_laboratories(),
+        can_manage_laboratories=can_manage_laboratories(current_user),
     )
 
 
@@ -86,6 +88,7 @@ def internal_laboratory_map(laboratory_id: int):
         "laboratories/map.html",
         laboratory=laboratory,
         workstations=inventory_service.list_workstations_by_laboratory(laboratory),
+        can_manage_laboratories=can_manage_laboratories(current_user),
     )
 
 

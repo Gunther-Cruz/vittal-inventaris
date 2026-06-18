@@ -24,10 +24,10 @@ class AssetAllocationFlowTestCase(unittest.TestCase):
             {"code": "E01", "map_position_x": "", "map_position_y": "", "notes": ""},
         )
         self.computer_case = self.inventory_service.create_computer_case(
-            {"asset_tag": "PAT-001", "manufacturer": "Dell", "model": "OptiPlex", "operational_status": "FUNCIONAL_DESALOCADO"}
+            {"asset_tag": "PAT-001", "manufacturer": "Dell", "model": "OptiPlex"}
         )
         self.monitor = self.inventory_service.create_monitor(
-            {"asset_tag": "MON-001", "manufacturer": "Dell", "model": "E2216H", "operational_status": "FUNCIONAL_DESALOCADO"}
+            {"asset_tag": "MON-001", "manufacturer": "Dell", "model": "E2216H"}
         )
         self.usuario_service.cadastrar_usuario(
             {"nome": "Professor IFRS", "email": "professor@ifrs.edu.br", "senha": "SenhaTeste123", "perfil": "PROFESSOR"}

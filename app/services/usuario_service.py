@@ -53,7 +53,10 @@ class UsuarioService:
         usuario.perfil = self._normalizar_perfil(perfil)
         return self.usuario_repository.commit(usuario)
 
-    def alterar_status_usuario(self, usuario: Usuario, ativo: bool) -> Usuario:
+    def alterar_status_usuario(self, usuario: Usuario, ativo: bool, ator: Usuario | None = None) -> Usuario:
+        if ator is not None and ator.id == usuario.id and not bool(ativo):
+            raise ValueError("You cannot deactivate your own user.")
+
         usuario.ativo = bool(ativo)
         return self.usuario_repository.commit(usuario)
 

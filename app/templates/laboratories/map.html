@@ -4,7 +4,17 @@
 
 {% block content %}
 <h1>{{ laboratory.code }} - {{ laboratory.name }}</h1>
-<p>Internal laboratory map. Asset and ticket details will be added in future blocks.</p>
+<p>Internal laboratory map. Asset and ticket details will be expanded in future blocks.</p>
+
+<section aria-label="QA shortcuts">
+  <h2>QA shortcuts</h2>
+  <a href="{{ url_for('laboratories.list_laboratories') }}">Back to laboratories</a>
+  <a href="{{ url_for('workstations.list_workstations', laboratory_id=laboratory.id) }}">Workstation list</a>
+  <a href="{{ url_for('public.public_workstations', laboratory_id=laboratory.id) }}">Public station view</a>
+  {% if can_manage_laboratories %}
+    <a href="{{ url_for('workstations.new_workstation', laboratory_id=laboratory.id) }}">Create workstation</a>
+  {% endif %}
+</section>
 
 {% if workstations %}
   <ul>
@@ -16,6 +26,10 @@
           <span>Position: {{ workstation.map_position_x }}, {{ workstation.map_position_y }}</span>
         {% else %}
           <span>Position not defined</span>
+        {% endif %}
+        <a href="{{ url_for('asset_allocations.show_workstation_assets', workstation_id=workstation.id) }}">Assets</a>
+        {% if can_manage_laboratories %}
+          <a href="{{ url_for('workstations.edit_workstation', workstation_id=workstation.id) }}">Edit</a>
         {% endif %}
       </li>
     {% endfor %}

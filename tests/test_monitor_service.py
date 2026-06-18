@@ -59,7 +59,6 @@ class MonitorServiceTestCase(unittest.TestCase):
                 serial_number="MSN-002",
                 model="P2219H",
                 display_connection="DISPLAYPORT",
-                operational_status="EM_MANUTENCAO",
             ),
         )
 
@@ -67,14 +66,15 @@ class MonitorServiceTestCase(unittest.TestCase):
         self.assertEqual("MSN-002", monitor.serial_number)
         self.assertEqual("P2219H", monitor.model)
         self.assertEqual(DisplayConnection.DISPLAYPORT, monitor.display_connection)
-        self.assertEqual(OperationalStatus.EM_MANUTENCAO, monitor.operational_status)
+        self.assertEqual(OperationalStatus.FUNCIONAL_DESALOCADO, monitor.operational_status)
 
-    def test_set_operational_status(self):
+    def test_rejects_manual_operational_status_change(self):
         monitor = self.inventory_service.create_monitor(self._monitor_data())
 
-        self.inventory_service.set_monitor_status(monitor, "DESATIVADO")
+        with self.assertRaisesRegex(ValueError, "Asset status must be changed through assignment"):
+            self.inventory_service.set_monitor_status(monitor, "DESATIVADO")
 
-        self.assertEqual(OperationalStatus.DESATIVADO, monitor.operational_status)
+        self.assertEqual(OperationalStatus.FUNCIONAL_DESALOCADO, monitor.operational_status)
 
     def test_rejects_invalid_display_connection(self):
         with self.assertRaisesRegex(ValueError, "Invalid display connection."):
@@ -101,7 +101,6 @@ class MonitorServiceTestCase(unittest.TestCase):
             "purchase_date": "2022-03-15",
             "screen_size_inches": "21.50",
             "display_connection": "HDMI",
-            "operational_status": "FUNCIONAL_DESALOCADO",
             "notes": "Initial monitor collection",
         }
         data.update(overrides)

@@ -5,9 +5,17 @@
 {% block content %}
 <h1>Computer cases</h1>
 
-{% if current_user.perfil.value == "TECNICO" %}
-  <p><a href="{{ url_for('computer_cases.new_computer_case') }}">New computer case</a></p>
-{% endif %}
+<section aria-label="QA shortcuts">
+  <h2>QA shortcuts</h2>
+  <p>Use this page to test inventory access, administrative status changes, and status lock for assigned assets.</p>
+  <a href="{{ url_for('laboratories.list_laboratories') }}">Go to laboratories</a>
+  <a href="{{ url_for('monitors.list_monitors') }}">Go to monitors</a>
+  {% if current_user.perfil.value == "TECNICO" %}
+    <a href="{{ url_for('computer_cases.new_computer_case') }}">Create computer case</a>
+  {% else %}
+    <p>Your profile can inspect computer cases but cannot create or edit technical inventory data.</p>
+  {% endif %}
+</section>
 
 <table>
   <thead>
@@ -32,21 +40,9 @@
           <a href="{{ url_for('computer_cases.show_computer_case', computer_case_id=computer_case.id) }}">Details</a>
           {% if current_user.perfil.value == "TECNICO" %}
             <a href="{{ url_for('computer_cases.edit_computer_case', computer_case_id=computer_case.id) }}">Edit</a>
-            {% if computer_case.id in assigned_computer_case_ids %}
-              <p>Status for assigned assets changes through unassignment or future service orders.</p>
-            {% else %}
-              <form method="post" action="{{ url_for('computer_cases.update_computer_case_status', computer_case_id=computer_case.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <select name="operational_status">
-                  {% for status in statuses %}
-                    {% if status.value != "EM_FUNCIONAMENTO" %}
-                      <option value="{{ status.value }}" {% if computer_case.operational_status == status %}selected{% endif %}>{{ status.value }}</option>
-                    {% endif %}
-                  {% endfor %}
-                </select>
-                <button type="submit">Update status</button>
-              </form>
-            {% endif %}
+            <p>Status changes through assignment, unassignment, or future service orders.</p>
+          {% else %}
+            <span>Read only</span>
           {% endif %}
         </td>
       </tr>

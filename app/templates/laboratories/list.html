@@ -5,7 +5,19 @@
 {% block content %}
 <h1>Laboratories</h1>
 
-<p><a href="{{ url_for('laboratories.new_laboratory') }}">New laboratory</a></p>
+<section aria-label="QA shortcuts">
+  <h2>QA shortcuts</h2>
+  <p>
+    Use this page to test internal laboratory access, status changes, workstation navigation,
+    and the difference between internal and public visibility.
+  </p>
+  <a href="{{ url_for('public.public_laboratories') }}">Open public laboratory view</a>
+  {% if can_manage_laboratories %}
+    <a href="{{ url_for('laboratories.new_laboratory') }}">Create laboratory</a>
+  {% else %}
+    <p>Your profile can view laboratories but cannot manage them.</p>
+  {% endif %}
+</section>
 
 <table>
   <thead>
@@ -27,18 +39,21 @@
         <td>
           <a href="{{ url_for('laboratories.internal_laboratory_map', laboratory_id=laboratory.id) }}">Map</a>
           <a href="{{ url_for('workstations.list_workstations', laboratory_id=laboratory.id) }}">Workstations</a>
-          <a href="{{ url_for('laboratories.edit_laboratory', laboratory_id=laboratory.id) }}">Edit</a>
+          <a href="{{ url_for('public.public_workstations', laboratory_id=laboratory.id) }}">Public stations</a>
+          {% if can_manage_laboratories %}
+            <a href="{{ url_for('laboratories.edit_laboratory', laboratory_id=laboratory.id) }}">Edit</a>
 
-          <form method="post" action="{{ url_for('laboratories.update_laboratory_status', laboratory_id=laboratory.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            {% if laboratory.active %}
-              <input type="hidden" name="active" value="false">
-              <button type="submit">Deactivate</button>
-            {% else %}
-              <input type="hidden" name="active" value="true">
-              <button type="submit">Reactivate</button>
-            {% endif %}
-          </form>
+            <form method="post" action="{{ url_for('laboratories.update_laboratory_status', laboratory_id=laboratory.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              {% if laboratory.active %}
+                <input type="hidden" name="active" value="false">
+                <button type="submit">Deactivate</button>
+              {% else %}
+                <input type="hidden" name="active" value="true">
+                <button type="submit">Reactivate</button>
+              {% endif %}
+            </form>
+          {% endif %}
         </td>
       </tr>
     {% endfor %}

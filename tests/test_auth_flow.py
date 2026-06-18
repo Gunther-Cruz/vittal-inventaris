@@ -214,6 +214,20 @@ class AuthFlowTestCase(unittest.TestCase):
         self.assertIn(b"Status do usuario atualizado com sucesso.", response.data)
         self.assertIsNone(self.auth_service.autenticar("tecnico@ifrs.edu.br", "SenhaTeste123"))
 
+    def test_coordenador_nao_pode_desativar_proprio_usuario_pela_interface(self):
+        self._login("coordenador@ifrs.edu.br")
+        csrf_token = self._csrf_token_from("/usuarios")
+
+        response = self.client.post(
+            f"/usuarios/{self.coordenador.id}/status",
+            data={"ativo": "false", "csrf_token": csrf_token},
+            follow_redirects=True,
+        )
+
+        self.assertEqual(200, response.status_code)
+        self.assertIn(b"You cannot deactivate your own user.", response.data)
+        self.assertIsNotNone(self.auth_service.autenticar("coordenador@ifrs.edu.br", "SenhaTeste123"))
+
     def test_coordenador_define_permissao_dashboard_pela_interface(self):
         self._login("coordenador@ifrs.edu.br")
         csrf_token = self._csrf_token_from("/usuarios")

@@ -5,7 +5,12 @@
 {% block content %}
 <h1>Usuarios</h1>
 
-<p><a href="{{ url_for('usuarios.novo_usuario') }}">Novo usuario</a></p>
+<section aria-label="QA shortcuts">
+  <h2>QA shortcuts</h2>
+  <p>Use this page to create users, edit profiles, activate/deactivate accounts, and test dashboard permission.</p>
+  <a href="{{ url_for('usuarios.novo_usuario') }}">Create user</a>
+  <a href="{{ url_for('auth.perfil') }}">Back to profile</a>
+</section>
 
 <table>
   <thead>
@@ -29,16 +34,20 @@
         <td>
           <a href="{{ url_for('usuarios.editar_usuario', usuario_id=usuario.id) }}">Editar</a>
 
-          <form method="post" action="{{ url_for('usuarios.alterar_status_usuario', usuario_id=usuario.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            {% if usuario.ativo %}
-              <input type="hidden" name="ativo" value="false">
-              <button type="submit">Desativar</button>
-            {% else %}
-              <input type="hidden" name="ativo" value="true">
-              <button type="submit">Ativar</button>
-            {% endif %}
-          </form>
+          {% if usuario.id == current_user.id and usuario.ativo %}
+            <p>Voce nao pode desativar o proprio usuario.</p>
+          {% else %}
+            <form method="post" action="{{ url_for('usuarios.alterar_status_usuario', usuario_id=usuario.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              {% if usuario.ativo %}
+                <input type="hidden" name="ativo" value="false">
+                <button type="submit">Desativar</button>
+              {% else %}
+                <input type="hidden" name="ativo" value="true">
+                <button type="submit">Ativar</button>
+              {% endif %}
+            </form>
+          {% endif %}
 
           <form method="post" action="{{ url_for('usuarios.definir_permissao_dashboard', usuario_id=usuario.id) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

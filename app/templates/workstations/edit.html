@@ -11,11 +11,8 @@
   <label for="code">Code</label>
   <input id="code" name="code" type="text" value="{{ workstation.code }}" required>
 
-  <label for="map_position_x">Map position X</label>
-  <input id="map_position_x" name="map_position_x" type="number" value="{{ workstation.map_position_x or '' }}">
-
-  <label for="map_position_y">Map position Y</label>
-  <input id="map_position_y" name="map_position_y" type="number" value="{{ workstation.map_position_y or '' }}">
+  <p>Map position: {{ workstation.map_position_x }}, {{ workstation.map_position_y }}</p>
+  <p>Map position is assigned automatically in a four-column matrix and is not edited manually in this flow.</p>
 
   <label for="notes">Notes</label>
   <textarea id="notes" name="notes">{{ workstation.notes or "" }}</textarea>

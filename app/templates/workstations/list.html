@@ -5,8 +5,18 @@
 {% block content %}
 <h1>Workstations - {{ laboratory.code }}</h1>
 
-<p><a href="{{ url_for('workstations.new_workstation', laboratory_id=laboratory.id) }}">New workstation</a></p>
-<p><a href="{{ url_for('laboratories.internal_laboratory_map', laboratory_id=laboratory.id) }}">Internal map</a></p>
+<section aria-label="QA shortcuts">
+  <h2>QA shortcuts</h2>
+  <p>Use this page to create/edit workstations, open the internal map, and jump to asset binding.</p>
+  <a href="{{ url_for('laboratories.list_laboratories') }}">Back to laboratories</a>
+  <a href="{{ url_for('laboratories.internal_laboratory_map', laboratory_id=laboratory.id) }}">Internal map</a>
+  <a href="{{ url_for('public.public_workstations', laboratory_id=laboratory.id) }}">Public station view</a>
+  {% if can_manage_workstations %}
+    <a href="{{ url_for('workstations.new_workstation', laboratory_id=laboratory.id) }}">Create workstation</a>
+  {% else %}
+    <p>Your profile can view workstations but cannot manage them.</p>
+  {% endif %}
+</section>
 
 <table>
   <thead>
@@ -31,17 +41,19 @@
         <td>{% if workstation.active %}Active{% else %}Inactive{% endif %}</td>
         <td>
           <a href="{{ url_for('asset_allocations.show_workstation_assets', workstation_id=workstation.id) }}">Assets</a>
-          <a href="{{ url_for('workstations.edit_workstation', workstation_id=workstation.id) }}">Edit</a>
-          <form method="post" action="{{ url_for('workstations.update_workstation_status', workstation_id=workstation.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            {% if workstation.active %}
-              <input type="hidden" name="active" value="false">
-              <button type="submit">Deactivate</button>
-            {% else %}
-              <input type="hidden" name="active" value="true">
-              <button type="submit">Reactivate</button>
-            {% endif %}
-          </form>
+          {% if can_manage_workstations %}
+            <a href="{{ url_for('workstations.edit_workstation', workstation_id=workstation.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('workstations.update_workstation_status', workstation_id=workstation.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              {% if workstation.active %}
+                <input type="hidden" name="active" value="false">
+                <button type="submit">Deactivate</button>
+              {% else %}
+                <input type="hidden" name="active" value="true">
+                <button type="submit">Reactivate</button>
+              {% endif %}
+            </form>
+          {% endif %}
         </td>
       </tr>
     {% endfor %}

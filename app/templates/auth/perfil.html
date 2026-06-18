@@ -8,12 +8,19 @@
 <p>{{ current_user.email }}</p>
 <p>{{ current_user.perfil.value }}</p>
 
+<section aria-label="QA shortcuts">
+  <h2>QA shortcuts</h2>
+  <a href="{{ url_for('laboratories.list_laboratories') }}">Laboratories</a>
+  <a href="{{ url_for('computer_cases.list_computer_cases') }}">Computer cases</a>
+  <a href="{{ url_for('monitors.list_monitors') }}">Monitors</a>
+  <a href="{{ url_for('public.home') }}">Public home</a>
+  <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+</section>
+
 {% if current_user.perfil.value == "COORDENADOR" %}
   <p><a href="{{ url_for('usuarios.novo_usuario') }}">Criar usuario</a></p>
   <p><a href="{{ url_for('usuarios.listar_usuarios') }}">Gerenciar usuarios</a></p>
 {% endif %}
-
-<p><a href="{{ url_for('dashboard.index') }}">Dashboard</a></p>
 
 <form method="post" action="{{ url_for('auth.logout') }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

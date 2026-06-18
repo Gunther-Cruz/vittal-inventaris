@@ -96,7 +96,7 @@ class WorkstationExtraQaTestCase(unittest.TestCase):
         self.assertEqual(400, response.status_code)
         self.assertIn(b"Code is required.", response.data)
 
-    def test_create_workstation_rejects_non_integer_positions(self):
+    def test_create_workstation_ignores_manual_position_payload(self):
         self._login("tecnico.ws.qa@ifrs.edu.br")
         csrf_token = self._csrf_token_from(f"/laboratories/{self.laboratory.id}/workstations/new")
 
@@ -108,10 +108,13 @@ class WorkstationExtraQaTestCase(unittest.TestCase):
                 "map_position_y": "10",
                 "csrf_token": csrf_token,
             },
+            follow_redirects=True,
         )
 
-        self.assertEqual(400, response.status_code)
-        self.assertIn(b"Map positions must be integers.", response.data)
+        self.assertEqual(200, response.status_code)
+        workstation = self.inventory_service.get_workstation(1)
+        self.assertEqual(1, workstation.map_position_x)
+        self.assertEqual(1, workstation.map_position_y)
 
     def test_missing_workstation_status_returns_404(self):
         self._login("tecnico.ws.qa@ifrs.edu.br")

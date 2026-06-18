@@ -141,7 +141,8 @@ class AssetAllocationServiceTestCase(unittest.TestCase):
             )
 
     def test_rejects_assignment_of_asset_not_functional_unassigned(self):
-        self.inventory_service.set_computer_case_status(self.computer_case, "EM_MANUTENCAO")
+        self.computer_case.operational_status = OperationalStatus.EM_MANUTENCAO
+        db.session.commit()
 
         with self.assertRaisesRegex(ValueError, "Only unassigned functional computer cases can be assigned."):
             self.inventory_service.assign_computer_case_to_workstation(
@@ -151,7 +152,7 @@ class AssetAllocationServiceTestCase(unittest.TestCase):
                 {"movement_reason": "Should fail"},
             )
 
-    def test_rejects_direct_status_change_for_assigned_computer_case(self):
+    def test_rejects_direct_status_change_for_computer_case(self):
         self.inventory_service.assign_computer_case_to_workstation(
             self.computer_case,
             self.workstation,
@@ -159,7 +160,7 @@ class AssetAllocationServiceTestCase(unittest.TestCase):
             {"movement_reason": "Initial installation"},
         )
 
-        with self.assertRaisesRegex(ValueError, "Assigned assets must have their status changed"):
+        with self.assertRaisesRegex(ValueError, "Asset status must be changed through assignment"):
             self.inventory_service.set_computer_case_status(self.computer_case, "EM_MANUTENCAO")
 
         self.assertEqual(OperationalStatus.EM_FUNCIONAMENTO, self.computer_case.operational_status)
@@ -172,7 +173,7 @@ class AssetAllocationServiceTestCase(unittest.TestCase):
             {"movement_reason": "Initial installation"},
         )
 
-        with self.assertRaisesRegex(ValueError, "Assigned assets must have their status changed"):
+        with self.assertRaisesRegex(ValueError, "Asset status must be changed through assignment"):
             self.inventory_service.update_computer_case(
                 self.computer_case,
                 self._computer_case_data(
@@ -184,7 +185,7 @@ class AssetAllocationServiceTestCase(unittest.TestCase):
         self.assertNotEqual("Updated model", self.computer_case.model)
         self.assertEqual(OperationalStatus.EM_FUNCIONAMENTO, self.computer_case.operational_status)
 
-    def test_rejects_direct_status_change_for_assigned_monitor(self):
+    def test_rejects_direct_status_change_for_monitor(self):
         self.inventory_service.assign_monitor_to_workstation(
             self.monitor,
             self.workstation,
@@ -192,7 +193,7 @@ class AssetAllocationServiceTestCase(unittest.TestCase):
             {"movement_reason": "Initial installation"},
         )
 
-        with self.assertRaisesRegex(ValueError, "Assigned assets must have their status changed"):
+        with self.assertRaisesRegex(ValueError, "Asset status must be changed through assignment"):
             self.inventory_service.set_monitor_status(self.monitor, "EM_MANUTENCAO")
 
         self.assertEqual(OperationalStatus.EM_FUNCIONAMENTO, self.monitor.operational_status)
@@ -205,7 +206,7 @@ class AssetAllocationServiceTestCase(unittest.TestCase):
             {"movement_reason": "Initial installation"},
         )
 
-        with self.assertRaisesRegex(ValueError, "Assigned assets must have their status changed"):
+        with self.assertRaisesRegex(ValueError, "Asset status must be changed through assignment"):
             self.inventory_service.update_monitor(
                 self.monitor,
                 self._monitor_data(
@@ -247,8 +248,8 @@ class AssetAllocationServiceTestCase(unittest.TestCase):
                 {"movement_reason": "Invalid", "operational_status": "EM_FUNCIONAMENTO"},
             )
 
-    def test_rejects_unassigned_asset_in_operation_status(self):
-        with self.assertRaisesRegex(ValueError, "Unassigned assets cannot be in operation."):
+    def test_rejects_manual_status_on_asset_creation(self):
+        with self.assertRaisesRegex(ValueError, "Asset status must be changed through assignment"):
             self.inventory_service.create_computer_case(
                 self._computer_case_data(asset_tag="PAT-003", serial_number="SN-003", operational_status="EM_FUNCIONAMENTO")
             )
@@ -259,7 +260,6 @@ class AssetAllocationServiceTestCase(unittest.TestCase):
             "serial_number": "SN-001",
             "manufacturer": "Dell",
             "model": "OptiPlex 3040",
-            "operational_status": "FUNCIONAL_DESALOCADO",
         }
         data.update(overrides)
         return data
@@ -272,7 +272,6 @@ class AssetAllocationServiceTestCase(unittest.TestCase):
             "model": "E2216H",
             "screen_size_inches": "21.50",
             "display_connection": "HDMI",
-            "operational_status": "FUNCIONAL_DESALOCADO",
         }
         data.update(overrides)
         return data

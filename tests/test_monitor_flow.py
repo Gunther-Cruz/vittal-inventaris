@@ -2,7 +2,7 @@ import re
 import unittest
 
 from app import create_app
-from app.domain.enums import DisplayConnection, OperationalStatus
+from app.domain.enums import DisplayConnection
 from app.extensions import db
 from app.services.inventory_service import InventoryService
 from app.services.usuario_service import UsuarioService
@@ -124,7 +124,7 @@ class MonitorFlowTestCase(unittest.TestCase):
         self.assertIn(b"P2219H", response.data)
         self.assertIn(b"DISPLAYPORT", response.data)
 
-    def test_technician_changes_operational_status(self):
+    def test_technician_cannot_change_operational_status_directly(self):
         monitor = self._create_monitor()
         self._login("tecnico@ifrs.edu.br")
         csrf_token = self._csrf_token_from("/monitors")
@@ -136,8 +136,7 @@ class MonitorFlowTestCase(unittest.TestCase):
         )
 
         self.assertEqual(200, response.status_code)
-        self.assertIn(b"DESATIVADO", response.data)
-        self.assertEqual(OperationalStatus.DESATIVADO, monitor.operational_status)
+        self.assertIn(b"Asset status must be changed through assignment", response.data)
 
     def test_duplicate_asset_tag_returns_400(self):
         self._create_monitor()
@@ -190,7 +189,6 @@ class MonitorFlowTestCase(unittest.TestCase):
             "purchase_date": "2022-03-15",
             "screen_size_inches": "21.50",
             "display_connection": "HDMI",
-            "operational_status": "FUNCIONAL_DESALOCADO",
             "notes": "Initial monitor collection",
         }
         data.update(overrides)

@@ -24,22 +24,29 @@ class WorkstationServiceTestCase(unittest.TestCase):
         db.drop_all()
         self.app_context.pop()
 
-    def test_create_workstation_normalizes_code_and_positions(self):
+    def test_create_workstation_normalizes_code_and_assigns_first_position(self):
         workstation = self.inventory_service.create_workstation(
             self.lab_10,
             {
                 "code": " e01 ",
-                "map_position_x": "10",
-                "map_position_y": "20",
                 "notes": "First position",
             },
         )
 
         self.assertIsNotNone(workstation.id)
         self.assertEqual("E01", workstation.code)
-        self.assertEqual(10, workstation.map_position_x)
-        self.assertEqual(20, workstation.map_position_y)
+        self.assertEqual(1, workstation.map_position_x)
+        self.assertEqual(1, workstation.map_position_y)
         self.assertTrue(workstation.active)
+
+    def test_create_workstations_assigns_positions_in_four_column_matrix(self):
+        workstations = [self._create_workstation(self.lab_10, f"E0{index}") for index in range(1, 6)]
+
+        self.assertEqual((1, 1), (workstations[0].map_position_x, workstations[0].map_position_y))
+        self.assertEqual((2, 1), (workstations[1].map_position_x, workstations[1].map_position_y))
+        self.assertEqual((3, 1), (workstations[2].map_position_x, workstations[2].map_position_y))
+        self.assertEqual((4, 1), (workstations[3].map_position_x, workstations[3].map_position_y))
+        self.assertEqual((1, 2), (workstations[4].map_position_x, workstations[4].map_position_y))
 
     def test_rejects_duplicate_code_in_same_laboratory(self):
         self._create_workstation(self.lab_10, "E01")
@@ -62,15 +69,13 @@ class WorkstationServiceTestCase(unittest.TestCase):
             workstation,
             {
                 "code": "E02",
-                "map_position_x": "30",
-                "map_position_y": "",
                 "notes": " ",
             },
         )
 
         self.assertEqual("E02", workstation.code)
-        self.assertEqual(30, workstation.map_position_x)
-        self.assertIsNone(workstation.map_position_y)
+        self.assertEqual(1, workstation.map_position_x)
+        self.assertEqual(1, workstation.map_position_y)
         self.assertIsNone(workstation.notes)
 
     def test_update_rejects_duplicate_in_same_laboratory(self):

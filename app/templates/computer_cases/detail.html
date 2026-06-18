@@ -5,6 +5,19 @@
 {% block content %}
 <h1>Computer case - {{ computer_case.asset_tag }}</h1>
 
+<section aria-label="QA shortcuts">
+  <h2>QA shortcuts</h2>
+  <a href="{{ url_for('computer_cases.list_computer_cases') }}">Back to computer cases</a>
+  <a href="{{ url_for('laboratories.list_laboratories') }}">Go to laboratories</a>
+  {% set active_allocation = allocation_history | selectattr("end_at", "none") | list | first %}
+  {% if active_allocation %}
+    <a href="{{ url_for('asset_allocations.show_workstation_assets', workstation_id=active_allocation.workstation.id) }}">Open current workstation assets</a>
+  {% endif %}
+  {% if current_user.perfil.value == "TECNICO" %}
+    <a href="{{ url_for('computer_cases.edit_computer_case', computer_case_id=computer_case.id) }}">Edit computer case</a>
+  {% endif %}
+</section>
+
 <dl>
   <dt>Asset tag</dt>
   <dd>{{ computer_case.asset_tag }}</dd>
@@ -40,7 +53,6 @@
   <dd>{{ computer_case.operational_status.value }}</dd>
   <dt>Current location</dt>
   <dd>
-    {% set active_allocation = allocation_history | selectattr("end_at", "none") | list | first %}
     {% if active_allocation %}
       {{ active_allocation.workstation.laboratory.code }} / {{ active_allocation.workstation.code }}
     {% else %}
@@ -75,8 +87,5 @@
   </tbody>
 </table>
 
-{% if current_user.perfil.value == "TECNICO" %}
-  <p><a href="{{ url_for('computer_cases.edit_computer_case', computer_case_id=computer_case.id) }}">Edit computer case</a></p>
-{% endif %}
 <p><a href="{{ url_for('computer_cases.list_computer_cases') }}">Back to computer cases</a></p>
 {% endblock %}

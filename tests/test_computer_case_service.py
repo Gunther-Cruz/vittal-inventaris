@@ -58,24 +58,24 @@ class ComputerCaseServiceTestCase(unittest.TestCase):
                 asset_tag="PAT-002",
                 serial_number="SN-002",
                 model="OptiPlex 7050",
-                operational_status="EM_MANUTENCAO",
             ),
         )
 
         self.assertEqual("PAT-002", computer_case.asset_tag)
         self.assertEqual("SN-002", computer_case.serial_number)
         self.assertEqual("OptiPlex 7050", computer_case.model)
-        self.assertEqual(OperationalStatus.EM_MANUTENCAO, computer_case.operational_status)
+        self.assertEqual(OperationalStatus.FUNCIONAL_DESALOCADO, computer_case.operational_status)
 
-    def test_set_operational_status(self):
+    def test_rejects_manual_operational_status_change(self):
         computer_case = self.inventory_service.create_computer_case(self._computer_case_data())
 
-        self.inventory_service.set_computer_case_status(computer_case, "DESATIVADO")
+        with self.assertRaisesRegex(ValueError, "Asset status must be changed through assignment"):
+            self.inventory_service.set_computer_case_status(computer_case, "DESATIVADO")
 
-        self.assertEqual(OperationalStatus.DESATIVADO, computer_case.operational_status)
+        self.assertEqual(OperationalStatus.FUNCIONAL_DESALOCADO, computer_case.operational_status)
 
-    def test_rejects_invalid_operational_status(self):
-        with self.assertRaisesRegex(ValueError, "Invalid operational status."):
+    def test_rejects_manual_operational_status_on_create(self):
+        with self.assertRaisesRegex(ValueError, "Asset status must be changed through assignment"):
             self.inventory_service.create_computer_case(self._computer_case_data(operational_status="QUEBRADO"))
 
     def test_rejects_invalid_purchase_date(self):
@@ -113,7 +113,6 @@ class ComputerCaseServiceTestCase(unittest.TestCase):
             "storage_description": "SSD 240GB SATA",
             "power_supply_description": "Fonte Dell 240W",
             "operating_system": "Ubuntu MATE 22.04",
-            "operational_status": "FUNCIONAL_DESALOCADO",
             "notes": "Initial technical collection",
         }
         data.update(overrides)

@@ -7,6 +7,18 @@
 
 <p>Laboratory: {{ workstation.laboratory.code }} - {{ workstation.laboratory.name }}</p>
 
+<section aria-label="QA shortcuts">
+  <h2>QA shortcuts</h2>
+  <p>Use this page to bind and unbind assets without typing URLs.</p>
+  <a href="{{ url_for('workstations.list_workstations', laboratory_id=workstation.laboratory_id) }}">Back to workstation list</a>
+  <a href="{{ url_for('laboratories.internal_laboratory_map', laboratory_id=workstation.laboratory_id) }}">Internal map</a>
+  <a href="{{ url_for('computer_cases.list_computer_cases') }}">Computer cases</a>
+  <a href="{{ url_for('monitors.list_monitors') }}">Monitors</a>
+  {% if current_user.perfil.value != "TECNICO" %}
+    <p>Your profile can inspect current bindings but cannot assign or unassign assets.</p>
+  {% endif %}
+</section>
+
 <section>
   <h2>Current computer case</h2>
   {% if workstation.current_computer_case %}
@@ -60,7 +72,8 @@
           <button type="submit">Assign computer case</button>
         </form>
       {% else %}
-        <p>No unassigned functional computer cases available.</p>
+        <p>No unassigned functional computer cases available. Create one or unassign an existing computer case first.</p>
+        <p><a href="{{ url_for('computer_cases.list_computer_cases') }}">Open computer cases</a></p>
       {% endif %}
     {% endif %}
   {% endif %}
@@ -119,7 +132,8 @@
           <button type="submit">Assign monitor</button>
         </form>
       {% else %}
-        <p>No unassigned functional monitors available.</p>
+        <p>No unassigned functional monitors available. Create one or unassign an existing monitor first.</p>
+        <p><a href="{{ url_for('monitors.list_monitors') }}">Open monitors</a></p>
       {% endif %}
     {% endif %}
   {% endif %}
