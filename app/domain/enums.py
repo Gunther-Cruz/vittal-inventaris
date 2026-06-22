@@ -21,3 +21,10 @@ class DisplayConnection(Enum):
     DVI = "DVI"
     USB_C = "USB_C"
     OUTRA = "OUTRA"
+
+
+class ProblemScope(Enum):
+    LABORATORY = "LABORATORY"
+    WORKSTATION = "WORKSTATION"
+    COMPUTER_CASE = "COMPUTER_CASE"
+    MONITOR = "MONITOR"

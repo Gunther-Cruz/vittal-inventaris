@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Edit problem type - {{ problem_type.code }}{% endblock %}
+
+{% block content %}
+<h1>Edit problem type - {{ problem_type.code }}</h1>
+
+<p>Only name and description can be edited. If code or scope is wrong, disable this record and create a new one.</p>
+
+<form method="post" action="{{ url_for('problem_types.update_problem_type', problem_type_id=problem_type.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% include "problem_types/_form.html" %}
+  <button type="submit">Update problem type</button>
+</form>
+
+<p><a href="{{ url_for('problem_types.list_problem_types') }}">Back to problem types</a></p>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}New problem type - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>New problem type</h1>
+
+<p>Problem types classify maintenance work internally. They are not shown to the public ticket opener.</p>
+
+<form method="post" action="{{ url_for('problem_types.create_problem_type') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% include "problem_types/_form.html" %}
+  <button type="submit">Create problem type</button>
+</form>
+
+<p><a href="{{ url_for('problem_types.list_problem_types') }}">Back to problem types</a></p>
+{% endblock %}

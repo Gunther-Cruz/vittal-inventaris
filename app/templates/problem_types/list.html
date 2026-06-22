@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Problem types - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>Problem types</h1>
+
+<section aria-label="QA shortcuts">
+  <h2>QA shortcuts</h2>
+  <p>Use this page to validate maintenance classification codes, scope ranges, activation, and edit restrictions.</p>
+  <a href="{{ url_for('problem_types.new_problem_type') }}">Create problem type</a>
+</section>
+
+<section aria-label="Problem type filters">
+  <h2>Filters</h2>
+  <form method="get" action="{{ url_for('problem_types.list_problem_types') }}">
+    <label for="scope">Scope</label>
+    <select id="scope" name="scope">
+      <option value="">All scopes</option>
+      {% for scope in scopes %}
+        <option value="{{ scope.value }}" {% if selected_scope == scope.value %}selected{% endif %}>{{ scope.value }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="active">Status</label>
+    <select id="active" name="active">
+      <option value="">All statuses</option>
+      <option value="true" {% if selected_active == "true" %}selected{% endif %}>Active</option>
+      <option value="false" {% if selected_active == "false" %}selected{% endif %}>Inactive</option>
+    </select>
+
+    <button type="submit">Apply filters</button>
+  </form>
+</section>
+
+<table>
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Name</th>
+      <th>Scope</th>
+      <th>Status</th>
+      <th>Description</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for problem_type in problem_types %}
+      <tr>
+        <td>{{ problem_type.code }}</td>
+        <td>{{ problem_type.name }}</td>
+        <td>{{ problem_type.scope.value }}</td>
+        <td>{% if problem_type.active %}Active{% else %}Inactive{% endif %}</td>
+        <td>{{ problem_type.description or "Not defined" }}</td>
+        <td>
+          <a href="{{ url_for('problem_types.edit_problem_type', problem_type_id=problem_type.id) }}">Edit name/description</a>
+          <form method="post" action="{{ url_for('problem_types.update_problem_type_status', problem_type_id=problem_type.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if problem_type.active %}
+              <input type="hidden" name="active" value="false">
+              <button type="submit">Deactivate</button>
+            {% else %}
+              <input type="hidden" name="active" value="true">
+              <button type="submit">Reactivate</button>
+            {% endif %}
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

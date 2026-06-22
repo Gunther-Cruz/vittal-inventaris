@@ -83,6 +83,16 @@ def can_manage_asset_allocations(usuario) -> bool:
     return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO)
 
 
+def can_view_problem_types(usuario) -> bool:
+    """Technicians and coordinators maintain the internal maintenance taxonomy."""
+    return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO, PerfilUsuario.COORDENADOR)
+
+
+def can_manage_problem_types(usuario) -> bool:
+    """Problem type maintenance is restricted to technical and coordination roles."""
+    return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO, PerfilUsuario.COORDENADOR)
+
+
 def perfis_criaveis_por(usuario) -> tuple[PerfilUsuario, ...]:
     if not pode_criar_usuarios(usuario):
         return ()
