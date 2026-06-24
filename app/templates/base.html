@@ -10,9 +10,11 @@
     <nav aria-label="Main navigation">
       <a href="{{ url_for('public.home') }}">Public home</a>
       <a href="{{ url_for('public.public_laboratories') }}">Public laboratories</a>
+      <a href="{{ url_for('public_tickets.lookup_ticket_form') }}">Lookup ticket</a>
       {% if current_user.is_authenticated %}
         <a href="{{ url_for('auth.perfil') }}">Profile</a>
         <a href="{{ url_for('laboratories.list_laboratories') }}">Laboratories</a>
+        <a href="{{ url_for('tickets.list_tickets') }}">Tickets</a>
         <a href="{{ url_for('computer_cases.list_computer_cases') }}">Computer cases</a>
         <a href="{{ url_for('monitors.list_monitors') }}">Monitors</a>
         <a href="{{ url_for('problem_types.list_problem_types') }}">Problem types</a>

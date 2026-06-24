@@ -93,6 +93,21 @@ def can_manage_problem_types(usuario) -> bool:
     return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO, PerfilUsuario.COORDENADOR)
 
 
+def can_view_tickets(usuario) -> bool:
+    """Technicians and coordinators can access the internal ticket queue."""
+    return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO, PerfilUsuario.COORDENADOR)
+
+
+def can_assign_tickets(usuario) -> bool:
+    """Technicians start the operational handling by assuming a ticket."""
+    return usuario_tem_perfil(usuario, PerfilUsuario.TECNICO)
+
+
+def can_change_ticket_status_manually(usuario) -> bool:
+    """Manual ticket status changes are exceptional and restricted to coordinators."""
+    return usuario_tem_perfil(usuario, PerfilUsuario.COORDENADOR)
+
+
 def perfis_criaveis_por(usuario) -> tuple[PerfilUsuario, ...]:
     if not pode_criar_usuarios(usuario):
         return ()

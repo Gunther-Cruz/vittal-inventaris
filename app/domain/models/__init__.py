@@ -5,6 +5,8 @@ from app.domain.models.laboratory import Laboratory
 from app.domain.models.monitor import Monitor
 from app.domain.models.monitor_allocation import MonitorAllocation
 from app.domain.models.problem_type import ProblemType
+from app.domain.models.ticket import Ticket
+from app.domain.models.ticket_history import TicketHistory
 from app.domain.models.usuario import Usuario
 from app.domain.models.workstation import Workstation
 
@@ -16,6 +18,8 @@ __all__ = [
     "Monitor",
     "MonitorAllocation",
     "ProblemType",
+    "Ticket",
+    "TicketHistory",
     "Usuario",
     "Workstation",
 ]

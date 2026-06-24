@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Chamado {{ ticket.protocol }} - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>Chamado {{ ticket.protocol }}</h1>
+
+<section aria-label="Ticket summary">
+  <p>Status: {{ ticket.status.value }}</p>
+  <p>Escopo: {{ ticket.scope.value }}</p>
+  <p>Solicitante: {{ ticket.requester_name }}</p>
+  <p>Email: {{ ticket.requester_email }}</p>
+  <p>Aberto em: {{ ticket.created_at }}</p>
+  {% if ticket.laboratory %}
+    <p>Laboratorio: {{ ticket.laboratory.code }} - {{ ticket.laboratory.name }}</p>
+  {% endif %}
+  {% if ticket.workstation %}
+    <p>Estacao: {{ ticket.workstation.code }}</p>
+  {% endif %}
+  {% if ticket.computer_case %}
+    <p>Gabinete: {{ ticket.computer_case.asset_tag }}</p>
+  {% endif %}
+  {% if ticket.monitor %}
+    <p>Monitor: {{ ticket.monitor.asset_tag }}</p>
+  {% endif %}
+  <p>Descricao: {{ ticket.description }}</p>
+</section>
+
+<p>Guarde este protocolo para consultar o andamento do chamado.</p>
+<p><a href="{{ url_for('public_tickets.lookup_ticket_form') }}">Consultar outro chamado</a></p>
+<p><a href="{{ url_for('public.home') }}">Voltar ao inicio</a></p>
+{% endblock %}

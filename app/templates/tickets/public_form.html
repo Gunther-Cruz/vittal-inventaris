@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Abrir chamado - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>Abrir chamado</h1>
+
+<section aria-label="Ticket context">
+  <h2>Contexto</h2>
+  <p>Escopo: {{ scope.value }}</p>
+  {% if laboratory %}
+    <p>Laboratorio: {{ laboratory.code }} - {{ laboratory.name }}</p>
+  {% endif %}
+  {% if workstation %}
+    <p>Estacao: {{ workstation.code }}</p>
+  {% endif %}
+  {% if computer_case %}
+    <p>Gabinete: {{ computer_case.asset_tag }} - {{ computer_case.model }}</p>
+  {% endif %}
+  {% if monitor %}
+    <p>Monitor: {{ monitor.asset_tag }} - {{ monitor.model }}</p>
+  {% endif %}
+</section>
+
+{% if error_message %}
+  <p>{{ error_message }}</p>
+{% endif %}
+
+<form method="post" action="{{ url_for('public_tickets.create_public_ticket') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="scope" value="{{ scope.value }}">
+  {% if laboratory %}
+    <input type="hidden" name="laboratory_id" value="{{ laboratory.id }}">
+  {% endif %}
+  {% if workstation %}
+    <input type="hidden" name="workstation_id" value="{{ workstation.id }}">
+  {% endif %}
+  {% if computer_case %}
+    <input type="hidden" name="computer_case_id" value="{{ computer_case.id }}">
+  {% endif %}
+  {% if monitor %}
+    <input type="hidden" name="monitor_id" value="{{ monitor.id }}">
+  {% endif %}
+
+  <div>
+    <label for="requester_name">Nome do solicitante</label>
+    <input
+      id="requester_name"
+      name="requester_name"
+      required
+      value="{{ form_data.requester_name if form_data is defined else (current_user.nome if current_user.is_authenticated else '') }}"
+    >
+  </div>
+
+  <div>
+    <label for="requester_email">Email institucional</label>
+    <input
+      id="requester_email"
+      name="requester_email"
+      type="email"
+      required
+      value="{{ form_data.requester_email if form_data is defined else (current_user.email if current_user.is_authenticated else '') }}"
+    >
+  </div>
+
+  <div>
+    <label for="description">Descricao do problema</label>
+    <textarea id="description" name="description" required>{{ form_data.description if form_data is defined else '' }}</textarea>
+  </div>
+
+  <button type="submit">Abrir chamado</button>
+</form>
+
+<p><a href="{{ url_for('public.home') }}">Voltar ao inicio</a></p>
+{% endblock %}

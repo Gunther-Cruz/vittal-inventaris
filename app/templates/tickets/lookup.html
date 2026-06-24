@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Consultar chamado - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>Consultar chamado</h1>
+
+<form method="post" action="{{ url_for('public_tickets.lookup_ticket') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div>
+    <label for="protocol">Protocolo</label>
+    <input id="protocol" name="protocol" required value="{{ protocol or '' }}">
+  </div>
+  <button type="submit">Consultar</button>
+</form>
+
+<p><a href="{{ url_for('public.home') }}">Voltar ao inicio</a></p>
+{% endblock %}

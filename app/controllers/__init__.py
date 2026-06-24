@@ -9,6 +9,8 @@ from app.controllers.laboratory_controller import laboratories_bp
 from app.controllers.monitor_controller import monitors_bp
 from app.controllers.problem_type_controller import problem_types_bp
 from app.controllers.public_controller import public_bp
+from app.controllers.public_ticket_controller import public_tickets_bp
+from app.controllers.ticket_controller import tickets_bp
 from app.controllers.usuario_controller import usuarios_bp
 from app.controllers.workstation_controller import workstations_bp
 
@@ -24,4 +26,6 @@ def register_controllers(app: Flask) -> None:
     app.register_blueprint(monitors_bp)
     app.register_blueprint(problem_types_bp)
     app.register_blueprint(usuarios_bp)
+    app.register_blueprint(public_tickets_bp)
+    app.register_blueprint(tickets_bp)
     app.register_blueprint(workstations_bp)

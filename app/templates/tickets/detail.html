@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket {{ ticket.protocol }} - VITTAL Inventaris{% endblock %}
+
+{% block content %}
+<h1>Ticket {{ ticket.protocol }}</h1>
+
+<section aria-label="Ticket detail">
+  <p>Status: {{ ticket.status.value }}</p>
+  <p>Scope: {{ ticket.scope.value }}</p>
+  <p>Requester: {{ ticket.requester_name }} - {{ ticket.requester_email }}</p>
+  <p>Description: {{ ticket.description }}</p>
+  <p>Assigned to: {{ ticket.assigned_to_user.email if ticket.assigned_to_user else "Unassigned" }}</p>
+  {% if ticket.laboratory %}<p>Laboratory: {{ ticket.laboratory.code }} - {{ ticket.laboratory.name }}</p>{% endif %}
+  {% if ticket.workstation %}<p>Workstation: {{ ticket.workstation.code }}</p>{% endif %}
+  {% if ticket.computer_case %}<p>Computer case: {{ ticket.computer_case.asset_tag }}</p>{% endif %}
+  {% if ticket.monitor %}<p>Monitor: {{ ticket.monitor.asset_tag }}</p>{% endif %}
+</section>
+
+<section aria-label="Actions">
+  <h2>Actions</h2>
+  {% if can_assign and ticket.status.value not in ["RESOLVIDO", "CANCELADO"] %}
+    <form method="post" action="{{ url_for('tickets.assign_ticket', ticket_id=ticket.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit">Assume ticket</button>
+    </form>
+  {% endif %}
+
+  {% if can_change_status %}
+    <form method="post" action="{{ url_for('tickets.change_ticket_status', ticket_id=ticket.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="status">Status</label>
+      <select id="status" name="status">
+        {% for status in statuses %}
+          <option value="{{ status.value }}" {% if ticket.status == status %}selected{% endif %}>{{ status.value }}</option>
+        {% endfor %}
+      </select>
+      <label for="reason">Reason</label>
+      <input id="reason" name="reason" required>
+      <button type="submit">Change status</button>
+    </form>
+  {% endif %}
+</section>
+
+<section aria-label="History">
+  <h2>History</h2>
+  {% if history %}
+    <ul>
+      {% for item in history %}
+        <li>
+          <strong>{{ item.event_type.value }}</strong>
+          <span>{{ item.created_at }}</span>
+          <span>{{ item.description }}</span>
+          {% if item.previous_status or item.new_status %}
+            <span>
+              {{ item.previous_status.value if item.previous_status else "-" }}
+              ->
+              {{ item.new_status.value if item.new_status else "-" }}
+            </span>
+          {% endif %}
+          {% if item.created_by_user %}
+            <span>by {{ item.created_by_user.email }}</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No history registered.</p>
+  {% endif %}
+</section>
+
+<p><a href="{{ url_for('tickets.list_tickets') }}">Back to tickets</a></p>
+{% endblock %}
